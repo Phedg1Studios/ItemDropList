@@ -1,0 +1,10 @@
+{
+    "name": "ItemDropList",
+    "version_number": "1.1.13",
+    "website_url": "",
+    "description": "This mod will allow players to choose which items can be found in chests and from boss drops.",
+    "dependencies": [
+      "bbepis-BepInExPack-5.3.1",
+      "tristanmcpherson-R2API-2.5.6"
+    ]
+}

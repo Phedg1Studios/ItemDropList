@@ -1,0 +1,60 @@
+IRRELEVANT
+[Info   : Unity Log] iscBarrel1
+[Info   : Unity Log] iscGoldshoresBeacon
+[Info   : Unity Log] iscGoldshoresPortal
+[Info   : Unity Log] iscMSPortal
+[Info   : Unity Log] iscRadarTower
+[Info   : Unity Log] iscShopPortal
+[Info   : Unity Log] iscSquidTurret
+[Info   : Unity Log] iscTeleporter
+[Info   : Unity Log] iscTeleporterLunar
+[Info   : Unity Log] iscScavLunarBackpack
+[Info   : Unity Log] iscRadarTower
+
+FIXED
+[Info   : Unity Log] iscCategoryChestDamage
+[Info   : Unity Log] iscCategoryChestHealing
+[Info   : Unity Log] iscCategoryChestUtility
+[Info   : Unity Log] iscChest1
+[Info   : Unity Log] iscChest1Stealthed
+[Info   : Unity Log] iscChest2
+[Info   : Unity Log] iscDuplicator
+[Info   : Unity Log] iscDuplicatorLarge
+[Info   : Unity Log] iscDuplicatorMilitary
+[Info   : Unity Log] iscDuplicatorWild
+[Info   : Unity Log] iscScrapper
+[Info   : Unity Log] iscEquipmentBarrel
+[Info   : Unity Log] iscGoldChest
+[Info   : Unity Log] iscShrineChance
+[Info   : Unity Log] iscTripleShop
+[Info   : Unity Log] iscTripleShopLarge
+[Info   : Unity Log] iscLunarChest
+[Info   : Unity Log] iscLockbox
+[Info   : Unity Log] iscShrineCleanse
+[Info   : Unity Log] iscShrineRestack
+[Info   : Unity Log] iscTripleShopEquipment
+[Info   : Unity Log] iscScavBackpack
+[Info   : Unity Log] iscCasinoChest
+[Info   : Unity Log] BossItems
+
+DRONES
+[Info   : Unity Log] iscBrokenDrone1
+[Info   : Unity Log] iscBrokenDrone2
+[Info   : Unity Log] iscBrokenEmergencyDrone
+[Info   : Unity Log] iscBrokenEquipmentDrone
+[Info   : Unity Log] iscBrokenFlameDrone
+[Info   : Unity Log] iscBrokenMegaDrone
+[Info   : Unity Log] iscBrokenMissileDrone
+[Info   : Unity Log] iscBrokenTurret1
+
+SHRINES
+[Info   : Unity Log] iscShrineBlood
+[Info   : Unity Log] iscShrineBoss
+[Info   : Unity Log] iscShrineHealing
+[Info   : Unity Log] iscShrineCombat
+[Info   : Unity Log] iscShrineGoldshoresAccess
+-
+-
+[Info   : Unity Log] iscShrineChance
+[Info   : Unity Log] iscShrineCleanse
+[Info   : Unity Log] iscShrineRestack
