@@ -10,7 +10,7 @@ namespace Phedg1Studios {
         public class DataNoShop : MonoBehaviour {
             static public readonly int mode = 0;
 
-            static public List<int> itemsToDrop = new List<int>();
+            static public List<List<int>> itemsToDrop = new List<List<int>>();
             static private string itemsToDropFile = "ItemsToDrop.txt";
             //static public int itemsToDropLine = 0;
 
@@ -30,23 +30,27 @@ namespace Phedg1Studios {
             //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-            static public void ToggleItem(int givenID) {
+            static public void ToggleItem(int givenID, bool shouldRefresh = true) {
                 if (Data.mode == mode) {
-                    if (itemsToDrop.Contains(givenID)) {
-                        itemsToDrop.Remove(givenID);
-                        Data.SaveProfileConfig();
-                        UIDrawer.Refresh();
+                    if (itemsToDrop[Data.profile[mode]].Contains(givenID)) {
+                        itemsToDrop[Data.profile[mode]].Remove(givenID);
+                        if (shouldRefresh) {
+                            Data.SaveConfigProfile();
+                            UIDrawer.Refresh();
+                        }
                     } else {
-                        itemsToDrop.Add(givenID);
-                        Data.SaveProfileConfig();
-                        UIDrawer.Refresh();
+                        itemsToDrop[Data.profile[mode]].Add(givenID);
+                        if (shouldRefresh) {
+                            Data.SaveConfigProfile();
+                            UIDrawer.Refresh();
+                        }
                     }
                 }
             }
 
             static public void SetDropList() {
                 if (Data.mode == mode) {
-                    Data.itemsToDrop = Data.DuplicateItemList(itemsToDrop);
+                    Data.itemsToDrop = Data.DuplicateItemList(itemsToDrop[Data.profile[mode]]);
                 }
             }
         }

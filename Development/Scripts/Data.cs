@@ -40,21 +40,29 @@ namespace Phedg1Studios {
             static private bool showAllItemsDefault = false;
             static public float interactableMultiplierDefault = 1;
             static public int modeDefault = 0;
+            static public bool effectMonsterItems;
+            static public bool effectMonsterItemsDefault = false;
 
-            static private int configVersion = 5;
+            static private int configVersion = 6;
             static private int configFileVersion = -1;
             static public bool modEnabled;
             static private bool showAllItems;
             static public float interactableMultiplier;
+            static public List<int> profile = new List<int>() { 0, 0};
+            static public int profileCount = 3;
             static public string userProfile = "";
             static public int mode;
+            static public int modeCount = 2;
             static public List<int> itemsToDrop = new List<int>();
+            static private bool defensiveMicrobots;
+            static private bool defensiveMicrobotsDefault = false;
 
             static public string developerName = "Phedg1 Studios";
             static public string modName = "Item Drop List";
             static public string modFolder;
-            static public string configFile = "Config.cfg";
+            static public string configFile = ".cfg";
             static public string profileConfigFile = ".txt";
+            static public char profileChar = '/';
             static public readonly char splitChar = ',';
             static public char variableChar = '=';
 
@@ -63,7 +71,14 @@ namespace Phedg1Studios {
             static public List<string> showAllName = new List<string>() { "showAllItems" };
             static public List<string> modeName = new List<string>() { "mode" };
             static public List<string> interactableMultiplierName = new List<string>() { "interactableMultiplier" };
+            static public List<string> profileName = new List<string>() { "profile" };
+            static public List<string> effectMonsterItemsName = new List<string>() { "effectMonsterItems" };
+            static public List<string> defensiveMicrobotsName = new List<string>() { "defensiveMicrobots" };
 
+            static public List<string> configName = new List<string>();
+            static public List<string> configProfileName = new List<string>();
+
+            static private List<string> oldConfigFiles = new List<string>();
 
             static private Dictionary<int, bool> discoveredRequired = new Dictionary<int, bool>() {
                 { 0, true },
@@ -104,9 +119,17 @@ namespace Phedg1Studios {
             }
 
             static public void MakeDirectoryExist() {
-                if (!Directory.Exists(BepInEx.Paths.BepInExRootPath + "/" + "config" + "/" + modFolder)) {
-                    Directory.CreateDirectory(BepInEx.Paths.BepInExRootPath + "/" + "config" + "/" + modFolder);
+                if (!Directory.Exists(BepInEx.Paths.BepInExRootPath + "/" + "config" + "/" + modName)) {
+                    Directory.CreateDirectory(BepInEx.Paths.BepInExRootPath + "/" + "config" + "/" + modName);
                 }
+            }
+
+            static public void UpdateConfigLocations() {
+                modFolder = developerName + "/" + modName;
+                configName.Add(BepInEx.Paths.BepInExRootPath + "/" + "config" + "/" + ItemDropList.PluginGUID + configFile);
+                configName.Add(BepInEx.Paths.BepInExRootPath + "/" + "config" + "/" + developerName + "/" + modName + "/Config" + configFile);
+                configProfileName.Add(BepInEx.Paths.BepInExRootPath + "/" + "config" + "/" + modName + "/");
+                configProfileName.Add(BepInEx.Paths.BepInExRootPath + "/" + "config" + "/" + developerName + "/" + modName + "/");
             }
 
 
@@ -115,17 +138,31 @@ namespace Phedg1Studios {
 
 
             static public void RefreshInfo(string givenProfileID = "") {
-                modFolder = developerName + "/" + modName;
+                oldConfigFiles.Clear();
                 MakeDirectoryExist();
                 GetUserProfileID(givenProfileID);
-                Dictionary<string, string> configGlobal = ReadConfig(BepInEx.Paths.BepInExRootPath + "/" + "config" + "/" + modFolder + "/" + configFile);
+                Dictionary<string, string> configGlobal = ReadConfig(configName);
                 GetConfig(configGlobal);
-                Dictionary<string, string> configProfile = ReadConfig(BepInEx.Paths.BepInExRootPath + "/" + "config" + "/" + modFolder + "/" + userProfile + profileConfigFile);
+                Dictionary<string, string> configProfile = ReadConfig(configProfileName, userProfile + profileConfigFile);
+                GetConfigProfile(configProfile);
                 DataNoShop.RefreshInfo(configGlobal, configProfile);
                 DataShop.RefreshInfo(configGlobal, configProfile);
-                CorrectConfig();
-                Data.SaveProfileConfig();
+                //CorrectConfig();
+                SaveConfig();
+                Data.SaveConfigProfile();
                 DeleteOldConfig();
+                DeleteOldConfigLocations();
+            }
+
+            static private void DeleteOldConfigLocations() {
+                foreach (string file in oldConfigFiles) {
+                    string directory = System.IO.Path.GetDirectoryName(file);
+                    File.Delete(file);
+                    while (Directory.GetFiles(directory).Length + Directory.GetDirectories(directory).Length == 0) {
+                        Directory.Delete(directory);
+                        directory = Directory.GetParent(directory).FullName;
+                    }
+                }
             }
 
             static void DeleteOldConfig() {
@@ -150,35 +187,42 @@ namespace Phedg1Studios {
                 }
             }
 
-            static Dictionary<string, string> ReadConfig(string givenPath) {
+            static Dictionary<string, string> ReadConfig(List<string> givenPaths, string givenSuffix = "") {
                 Dictionary<string, string> config = new Dictionary<string, string>();
-                if (File.Exists(givenPath)) {
-                    List<string> lines = new List<string>();
-                    StreamReader reader = new StreamReader(givenPath);
-                    while (reader.Peek() >= 0) {
-                        lines.Add(reader.ReadLine());
-                    }
-                    reader.Close();
-                    int lineIndex = 0;
-                    foreach (string lineRaw in lines) {
-                        string line = lineRaw;
-                        if ((line.Length >= 4 && line.Substring(0, 4) == "### ")) {
-                            line = line.Substring(4, line.Length - 4);
+                foreach (string givenPath in givenPaths) {
+                    if (File.Exists(givenPath + givenSuffix)) {
+                        if (givenPath != givenPaths[0]) {
+                            oldConfigFiles.Add(givenPath + givenSuffix);
                         }
-                        if (!string.IsNullOrEmpty(line) && !new List<string>() { "#", " " }.Contains(line.Substring(0, 1))) {
-                            string[] splitLine = line.Split(variableChar);
-                            if (splitLine.Length == 2) {
-                                for (int splitIndex = 0; splitIndex < splitLine.Length; splitIndex++) {
-                                    splitLine[splitIndex] = splitLine[splitIndex].Replace(" ", "");
-                                }
-                                if (!config.ContainsKey(splitLine[0])) {
-                                    config.Add(splitLine[0], splitLine[1]);
-                                }
-                            } else if (splitLine.Length == 1) {
-                                config.Add(lineIndex.ToString(), splitLine[0]);
+
+                        List<string> lines = new List<string>();
+                        StreamReader reader = new StreamReader(givenPath + givenSuffix);
+                        while (reader.Peek() >= 0) {
+                            lines.Add(reader.ReadLine());
+                        }
+                        reader.Close();
+                        int lineIndex = 0;
+                        foreach (string lineRaw in lines) {
+                            string line = lineRaw;
+                            if ((line.Length >= 4 && line.Substring(0, 4) == "### ")) {
+                                line = line.Substring(4, line.Length - 4);
                             }
-                            lineIndex += 1;
+                            if (!string.IsNullOrEmpty(line) && !new List<string>() { "#", " " }.Contains(line.Substring(0, 1))) {
+                                string[] splitLine = line.Split(variableChar);
+                                if (splitLine.Length == 2) {
+                                    for (int splitIndex = 0; splitIndex < splitLine.Length; splitIndex++) {
+                                        splitLine[splitIndex] = splitLine[splitIndex].Replace(" ", "");
+                                    }
+                                    if (!config.ContainsKey(splitLine[0])) {
+                                        config.Add(splitLine[0], splitLine[1]);
+                                    }
+                                } else if (splitLine.Length == 1) {
+                                    config.Add(lineIndex.ToString(), splitLine[0]);
+                                }
+                                lineIndex += 1;
+                            }
                         }
+                        break;
                     }
                 }
                 return config;
@@ -194,6 +238,27 @@ namespace Phedg1Studios {
                 showAllItems = ParseBool(showAllItemsDefault, Util.GetConfig(config, showAllName));
                 mode = ParseInt(modeDefault, Util.GetConfig(config, modeName));
                 interactableMultiplier = ParseFloat(interactableMultiplierDefault, Util.GetConfig(config, interactableMultiplierName));
+                effectMonsterItems = ParseBool(effectMonsterItemsDefault, Util.GetConfig(config, effectMonsterItemsName));
+                defensiveMicrobots = ParseBool(defensiveMicrobotsDefault, Util.GetConfig(config, defensiveMicrobotsName));
+            }
+
+            static void GetConfigProfile(Dictionary<string, string> config) {
+                string line = Util.GetConfig(config, profileName);
+                profile.Clear();
+                for (int profileIndex = 0; profileIndex < modeCount; profileIndex++) {
+                    profile.Add(0);
+                }
+                string[] splitString = line.Split(splitChar);
+                for (int profileIndex = 0; profileIndex < splitString.Length; profileIndex++) {
+                    if (profileIndex < modeCount) {
+                        int newProfile = 0;
+                        if (int.TryParse(splitString[profileIndex], out newProfile)) {
+                            if (newProfile >= 0 && newProfile < profileCount) {
+                                profile[profileIndex] = newProfile;
+                            }
+                        }
+                    }
+                }
             }
 
             static void CorrectConfig() {
@@ -235,7 +300,7 @@ namespace Phedg1Studios {
                 if (allItemIDs.ContainsKey(itemID)) {
                     if (RoR2.ItemCatalog.GetItemDef(allItemIDs[itemID]).pickupIconSprite != null && RoR2.ItemCatalog.GetItemDef(allItemIDs[itemID]).pickupIconSprite.name != "texNullIcon") {
                         if (RoR2.ItemCatalog.GetItemDef(allItemIDs[itemID]).tier != ItemTier.NoTier) {
-                            if (!badItems.Contains(allItemIDs[itemID])) {
+                            if (!badItems.Contains(allItemIDs[itemID]) || (allItemIDs[itemID] == ItemIndex.CaptainDefenseMatrix && defensiveMicrobots)) {
                                 return true;
                             }
                         }
@@ -307,23 +372,34 @@ namespace Phedg1Studios {
                 return ItemIndex.None;
             }
 
-            static public void GetItemList(Dictionary<string, string> config, List<string> configName, List<int> givenList, string givenFile, int givenMode) {
+            static public void GetItemList(Dictionary<string, string> config, List<string> configName, List<List<int>> givenList, string givenFile, int givenMode) {
                 string line = Util.GetConfig(config, configName);
                 string itemsPurchasedPath = BepInEx.Paths.BepInExRootPath + "/" + "config" + "/" + Data.modFolder + "/" + Data.userProfile + "/" + givenFile;
                 line = Util.MultilineToSingleLine(line, itemsPurchasedPath);
                 givenList.Clear();
-                string[] itemIDs = line.Split(Data.splitChar);
-                foreach (string itemIDString in itemIDs) {
-                    if (!string.IsNullOrEmpty(itemIDString)) {
-                        int itemID = 0;
-                        bool itemIDParsed = int.TryParse(itemIDString, out itemID);
-                        if (itemIDParsed) {
-                            if (Data.UnlockedItem(itemID, givenMode)) {
-                                if (!givenList.Contains(itemID)) {
-                                    givenList.Add(itemID);
+                for (int profile = 0; profile < profileCount; profile++) {
+                    givenList.Add(new List<int>());
+                }
+
+                int profileIndex = 0;
+                string[] profiles = line.Split(Data.profileChar);
+                foreach (string profile in profiles) {
+                    if (profileIndex < givenList.Count) {
+                        string[] itemIDs = profile.Split(Data.splitChar);
+                        foreach (string itemIDString in itemIDs) {
+                            if (!string.IsNullOrEmpty(itemIDString)) {
+                                int itemID = 0;
+                                bool itemIDParsed = int.TryParse(itemIDString, out itemID);
+                                if (itemIDParsed) {
+                                    if (Data.UnlockedItem(itemID, givenMode)) {
+                                        if (!givenList[profileIndex].Contains(itemID)) {
+                                            givenList[profileIndex].Add(itemID);
+                                        }
+                                    }
                                 }
                             }
                         }
+                        profileIndex += 1;
                     }
                 }
             }
@@ -333,9 +409,54 @@ namespace Phedg1Studios {
             //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-            static public void ToggleItem(int givenID) {
-                DataNoShop.ToggleItem(givenID);
-                DataShop.ToggleItem(givenID);
+            static public void SetProfile(int givenProfile) {
+                profile[mode] = givenProfile;
+                SaveConfigProfile();
+                UIDrawer.Refresh();
+            }
+
+            static public void ToggleItem(int givenID, bool shouldRefresh = true) {
+                DataNoShop.ToggleItem(givenID, shouldRefresh);
+                DataShop.ToggleItem(givenID, shouldRefresh);
+            }
+
+            static public void ToggleTier(int givenID) {
+                List<int> toggleList = GetLargeToggleList();
+                List<int> storeItems = UIDrawer.GetStoreItemsA();
+                bool desiredToggle = toggleList.Contains(givenID);
+                int desiredTier = GetItemTier(givenID);
+                foreach (int item in storeItems) {
+                    if (GetItemTier(item) == desiredTier) {
+                        if (toggleList.Contains(item) == desiredToggle) {
+                            ToggleItem(item, false);
+                        }
+                    }
+                }
+                SaveConfigProfile();
+                UIDrawer.Refresh();
+            }
+
+            static public void ToggleAll(int givenID) {
+
+                List<int> toggleList = GetLargeToggleList();
+                List<int> storeItems = UIDrawer.GetStoreItemsA();
+                bool desiredToggle = toggleList.Contains(givenID);
+                foreach (int item in storeItems) {
+                    if (toggleList.Contains(item) == desiredToggle) {
+                        ToggleItem(item, false);
+                    }
+                }
+                SaveConfigProfile();
+                UIDrawer.Refresh();
+            }
+
+            static List<int> GetLargeToggleList() {
+                if (Data.mode == DataNoShop.mode) {
+                    return DataNoShop.itemsToDrop[profile[mode]];
+                } else if (Data.mode == DataShop.mode) {
+                    return DataShop.itemsToDrop[profile[mode]];
+                }
+                return new List<int>();
             }
 
             static public void ToggleEnabled() {
@@ -348,14 +469,16 @@ namespace Phedg1Studios {
             static void SaveConfig() {
                 string spacing = " ";
                 string variableCharUpdate = spacing + variableChar + spacing;
-                string configPath = BepInEx.Paths.BepInExRootPath + "/" + "config" + "/" + modFolder + "/" + configFile;
+                string configPath = configName[0];
                 StreamWriter writer = new StreamWriter(configPath, false);
                 string configString = "";
                 configString += "### configVersion = " + configVersion.ToString();
                 configString += "\n\n[General]";
                 configString += "\n\n# Enable/disable the ItemDropList mod\n#\n# Setting type: Boolean\n# Default value: " + modEnabledDefault.ToString() + "\n" + enabledName[0] + variableCharUpdate + modEnabled.ToString().ToLower();
-                configString += "\n\n# Enable/disable showing all items mod\n# When enabled all items and equipment will be listed, even those which the player has not unlocked and discovered\n#\n# Setting type: Boolean\n# Default value: " + showAllItemsDefault.ToString() + "\n" + showAllName[0] + variableCharUpdate + showAllItems.ToString().ToLower();
+                configString += "\n\n# Enable/disable showing all items mod\n# When enabled all items and equipment will be listed, even those which the player has not unlocked and discovered\n#\n# Setting type: Boolean\n# Default value: " + showAllItemsDefault.ToString() + "\n" + showAllName[0] + variableCharUpdate + showAllItems.ToString();
                 configString += "\n\n# The mode currently in use\n# 0 is Standard, 1 is Training\n#\n# Setting type: Integer\n# Default value: " + modeDefault.ToString() + "\n" + modeName[0] + variableCharUpdate + mode.ToString();
+                configString += "\n\n# Whether monsters should be limited to the same item list\n# When active this effects the Artifact of Evolution, Void Fields and Scavengers\n#\n# Setting type: Boolean\n# Default value: " + effectMonsterItemsDefault.ToString() + "\n" + effectMonsterItemsName[0] + variableCharUpdate + effectMonsterItems.ToString();
+                configString += "\n\n# Whether Defensive Microbots should be added to the item list\n# When active it can be found in chests and be given to monsters\n#\n# Setting type: Boolean\n# Default value: " + defensiveMicrobotsDefault.ToString() + "\n" + defensiveMicrobotsName[0].ToString() + variableCharUpdate + defensiveMicrobots.ToString();
                 configString += "\n\n# Multiply amount of intereactables spawned per stage\n#\n# Setting type: Float\n# Default value: " + interactableMultiplierDefault.ToString() + "\n" + interactableMultiplierName[0] + variableCharUpdate + interactableMultiplier.ToString();
                 configString += "\n\n[Training]";
                 //configString += "\n\n# Chance to find scrap when picking up an item\n#\n# Setting type: Float\n# Default value: 1.0\nscrapDropChance = " + DataShop.scrapDropChance.ToString();
@@ -372,15 +495,16 @@ namespace Phedg1Studios {
                 writer.Close();
             }
 
-            static public void SaveProfileConfig() {
+            static public void SaveConfigProfile() {
                 string spacing = " ";
                 string variableCharUpdate = spacing + variableChar + spacing;
-                string configPath = BepInEx.Paths.BepInExRootPath + "/" + "config" + "/" + modFolder + "/" + userProfile + profileConfigFile;
+                string configPath = configProfileName[0] + userProfile + profileConfigFile;
                 StreamWriter writer = new StreamWriter(configPath, false);
                 string configString = "";
-                configString += DataNoShop.itemsToDropName[0] + variableCharUpdate + Util.ListToString(DataNoShop.itemsToDrop);
+                configString += Data.profileName[0] + variableCharUpdate + Util.ListToString(Data.profile);
+                configString += "\n" + DataNoShop.itemsToDropName[0] + variableCharUpdate + Util.ListListToString(DataNoShop.itemsToDrop);
                 configString += "\n" + DataShop.itemsPurchasedName[0] + variableCharUpdate + Util.ListToString(DataShop.blueprintsPurchased);
-                configString += "\n" + DataShop.itemsToDropName[0] + variableCharUpdate + Util.ListToString(DataShop.itemsToDrop);
+                configString += "\n" + DataShop.itemsToDropName[0] + variableCharUpdate + Util.ListListToString(DataShop.itemsToDrop);
                 configString += "\n" + DataShop.scrapName[0] + variableCharUpdate + Util.ListToString(DataShop.scrap);
                 configString += "\n" + DataShop.scrapRecentName[0] + variableCharUpdate + Util.ListToString(DataShop.scrapRecent);
                 configString += "\n" + DataShop.scrapStartingName[0] + variableCharUpdate + Util.ListToString(DataShop.scrapStarting);

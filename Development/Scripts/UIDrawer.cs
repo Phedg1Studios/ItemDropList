@@ -12,15 +12,15 @@ namespace Phedg1Studios {
             static public RectTransform rootTransform;
             static public List<GameObject> shopInterfaces = new List<GameObject>();
             static public RoR2.UI.MainMenu.BaseMainMenuScreen itemDropListMenu;
+            static List<List<Image>> profileImages = new List<List<Image>>();
             static public List<TMPro.TextMeshProUGUI> statusTexts = new List<TMPro.TextMeshProUGUI>();
             static public Dictionary<int, List<Image>> itemImages = new Dictionary<int, List<Image>>();
             static public Dictionary<int, List<TMPro.TextMeshProUGUI>> itemTexts = new Dictionary<int, List<TMPro.TextMeshProUGUI>>();
             static public float storeHeight = 0;
             static private List<string> instructionTexts = new List<string>() {
-                "LEFT CLICK to toggle",
+                "LEFT CLICK to toggle\nLEFT CLICK for TWO seconds to toggle entire tier\nLEFT CLICK for FOUR seconds to toggle everything",
                 "DOUBLE CLICK to enroll in a course\nPICK UP items of each rarity in game\nto collect aptitude score of the same rarity",
                 "PICK UP items of each rarity in game\nto collect aptitude score of the same rarity",
-                "LEFT CLICK to toggle\nPICK UP items of each rarity in game\nto collect aptitude score of the same rarity",
             };
             static public GameObject backButton;
 
@@ -30,6 +30,7 @@ namespace Phedg1Studios {
                 ClearShopInterfaces();
                 DrawShading();
                 CalculateVerticalOffset();
+                DrawBlueButtons();
                 DrawShop();
                 DrawBlackButtons();
                 DrawInstructions();
@@ -108,6 +109,22 @@ namespace Phedg1Studios {
                 shopInterfaces.Add(shadingB.gameObject);
             }
 
+            static void DrawBlueButtons() {
+                if (Data.mode == 0 || (Data.mode == 1 && DataShop.shopMode == 1 && DataShop.canDisablePurchasedBlueprints)) {
+                    profileImages.Clear();
+                    for (int profileIndex = 0; profileIndex < Data.profileCount; profileIndex++) {
+                        profileImages.Add(new List<Image>());
+                        GameObject button = ButtonCreator.SpawnBlueButton(rootTransform.gameObject, new Vector2(1, 1), new Vector2(UIConfig.blueButtonWidth, UIConfig.blueButtonHeight), "Profile: " + profileIndex.ToString(), TMPro.TextAlignmentOptions.Center, profileImages[profileIndex]);
+                        button.GetComponent<RectTransform>().localPosition = new Vector3(rootTransform.rect.width - UIConfig.offsetHorizontal - (UIConfig.blueButtonWidth + UIConfig.spacingHorizontal) * (Data.profileCount - 1 - profileIndex), -UIConfig.offsetVertical, 0);
+                        int profile = profileIndex;
+                        button.GetComponent<RoR2.UI.HGButton>().onClick.AddListener(() => {
+                            Data.SetProfile(profile);
+                        });
+                        shopInterfaces.Add(button);
+                    }
+                }
+            }
+
             static void DrawBlackButtons() {
                 backButton = ButtonCreator.SpawnBlackButton(rootTransform.gameObject, new Vector2(UIConfig.blackButtonWidth, UIConfig.blackButtonHeight), "Back", new List<TMPro.TextMeshProUGUI>(), true);
                 backButton.transform.parent.GetComponent<RectTransform>().localPosition = new Vector3(UIConfig.offsetHorizontal, -UIConfig.offsetVertical - UIConfig.blueButtonCount[Data.mode] * (UIConfig.blueButtonHeight + UIConfig.spacingVertical) - storeHeight - UIConfig.spacingVertical, 0);
@@ -139,7 +156,7 @@ namespace Phedg1Studios {
                     if (!DataShop.canDisablePurchasedBlueprints) {
                         instructionsText[0].text = instructionTexts[2];
                     } else {
-                        instructionsText[0].text = instructionTexts[3];
+                        instructionsText[0].text = instructionTexts[0];
                     }
                 }
                 shopInterfaces.Add(instructionsText[0].gameObject);
@@ -157,18 +174,23 @@ namespace Phedg1Studios {
             }
 
             static void DrawShop() {
-                List<int> storeItems = new List<int>();
-                if (UIConfig.GetMode() == 0) {
-                    storeItems = GetStoreItems(false, false);
-                } else if (UIConfig.GetMode() == 1) {
-                    storeItems = GetStoreItems(true, false);
-                } else if (UIConfig.GetMode() == 2) {
-                    storeItems = GetStoreItems(true, true);
-                }
+                List<int> storeItems = GetStoreItemsA();
                 shopInterfaces.Add(ScrollCreator.CreateScroll(rootTransform, UIConfig.displayRows[UIConfig.GetMode()], UIConfig.textCount[UIConfig.GetMode()], storeItems, rootTransform.rect.width - UIConfig.offsetHorizontal * 2, new Vector3(UIConfig.offsetHorizontal, -UIConfig.offsetVertical - UIConfig.blueButtonCount[Data.mode] *  (UIConfig.blueButtonHeight + UIConfig.spacingVertical), 0), itemImages, itemTexts));
             }
 
-            static List<int> GetStoreItems(bool blueprintsMatter, bool ownBlueprint) {
+            static public List<int> GetStoreItemsA() {
+                List<int> storeItems = new List<int>();
+                if (UIConfig.GetMode() == 0) {
+                    storeItems = GetStoreItemsB(false, false);
+                } else if (UIConfig.GetMode() == 1) {
+                    storeItems = GetStoreItemsB(true, false);
+                } else if (UIConfig.GetMode() == 2) {
+                    storeItems = GetStoreItemsB(true, true);
+                }
+                return storeItems;
+            }
+
+            static List<int> GetStoreItemsB(bool blueprintsMatter, bool ownBlueprint) {
                 List<int> storeItems = new List<int>();
                 foreach (ItemIndex itemIndex in RoR2.ItemCatalog.tier1ItemList) {
                     if (Data.UnlockedItem(Data.allItemsIndexes[itemIndex], Data.mode)) {
@@ -241,6 +263,7 @@ namespace Phedg1Studios {
                 foreach (GameObject gameObject in shopInterfaces) {
                     Destroy(gameObject);
                 }
+                profileImages.Clear();
                 shopInterfaces.Clear();
                 statusTexts.Clear();
                 itemImages.Clear();
@@ -248,6 +271,12 @@ namespace Phedg1Studios {
             }
 
             static public void Refresh() {
+                for (int profileIndex = 0; profileIndex < profileImages.Count; profileIndex++) {
+                    foreach (Image image in profileImages[profileIndex]) {
+                        image.gameObject.SetActive(profileIndex == Data.profile[Data.mode]);
+                    }
+                }
+
                 Color enabledColor = new Color(1, 1, 1, 1);
                 Color disabledColor = new Color(0.25f, 0.25f, 0.25f, 1);
 

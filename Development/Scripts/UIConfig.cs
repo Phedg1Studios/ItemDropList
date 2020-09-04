@@ -19,7 +19,7 @@ namespace Phedg1Studios {
             static public float itemTextHeight = 25;
             static public List<int> displayRows = new List<int>() { 8, 6, 8 };
             static public List<int> textCount = new List<int>() { 0, 1, 0 };
-            static public List<int> blueButtonCount = new List<int>() { 0, 1 };
+            static public List<int> blueButtonCount = new List<int>() { 1, 1 };
             static public float blueButtonWidth = 200;
             static public float blueButtonHeight = 48f;
             static public float blackButtonWidth = 200;

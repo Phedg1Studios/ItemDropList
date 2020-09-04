@@ -54,6 +54,19 @@ namespace Phedg1Studios {
                 return newString;
             }
 
+            static public string ListListToString(List<List<int>> givenList) {
+                string newString = "";
+                foreach (List<int> list in givenList) {
+                    foreach (int item in list) {
+                        newString += item.ToString() + Data.splitChar;
+                    }
+                    newString = TrimString(newString);
+                    newString += Data.profileChar;
+                }
+                newString = TrimString(newString);
+                return newString;
+            }
+
             static public string GetConfig(Dictionary<string, string> config, List<string> keys) {
                 foreach (string key in keys) {
                     if (config.ContainsKey(key)) {

@@ -21,7 +21,7 @@ namespace Phedg1Studios {
             static public void Refresh() {
                 if (Data.mode == DataNoShop.mode) {
                     foreach (int itemID in UIDrawer.itemImages.Keys) {
-                        if (DataNoShop.itemsToDrop.Contains(itemID)) {
+                        if (DataNoShop.itemsToDrop[Data.profile[DataNoShop.mode]].Contains(itemID)) {
                             for (int imageIndex = 0; imageIndex < 2; imageIndex++) {
                                 UIDrawer.itemImages[itemID][imageIndex].color = UIConfig.enabledColor;
                             }

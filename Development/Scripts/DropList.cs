@@ -176,22 +176,22 @@ namespace Phedg1Studios {
                 }
 
                 foreach (PickupIndex pickupIndex in self.availableTier1DropList) {
-                    self.availableItems.AddItem(pickupIndex.itemIndex);
+                    self.availableItems.Add(pickupIndex.itemIndex);
                 }
                 foreach (PickupIndex pickupIndex in self.availableTier2DropList) {
-                    self.availableItems.AddItem(pickupIndex.itemIndex);
+                    self.availableItems.Add(pickupIndex.itemIndex);
                 }
                 foreach (PickupIndex pickupIndex in self.availableTier3DropList) {
-                    self.availableItems.AddItem(pickupIndex.itemIndex);
+                    self.availableItems.Add(pickupIndex.itemIndex);
                 }
                 foreach (PickupIndex pickupIndex in self.availableBossDropList) {
-                    self.availableItems.AddItem(pickupIndex.itemIndex);
+                    self.availableItems.Add(pickupIndex.itemIndex);
                 }
                 foreach (PickupIndex pickupIndex in self.availableLunarDropList) {
-                    self.availableItems.AddItem(pickupIndex.itemIndex);
+                    self.availableItems.Add(pickupIndex.itemIndex);
                 }
                 foreach (PickupIndex pickupIndex in self.availableEquipmentDropList) {
-                    self.availableEquipment.AddEquipment(pickupIndex.equipmentIndex);
+                    self.availableEquipment.Add(pickupIndex.equipmentIndex);
                 }
 
                 R2API.DefaultItemDrops.AddDefaults();

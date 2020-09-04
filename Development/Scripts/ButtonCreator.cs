@@ -131,9 +131,19 @@ namespace Phedg1Studios {
                     tooltipProvider.bodyToken = RoR2.EquipmentCatalog.GetEquipmentDef(Data.allEquipmentIDs[givenID]).descriptionToken;
                 }
 
-                item.GetComponent<RoR2.UI.HGButton>().onClick.AddListener(() => {
+                PointerClick pointerClick = item.AddComponent<PointerClick>();
+
+                pointerClick.onLeftUnderTwo.AddListener(() => {
                     Data.ToggleItem(givenID);
                 });
+                if (Data.mode == DataNoShop.mode || (Data.mode == DataShop.mode && DataShop.mode == 1 && DataShop.canDisablePurchasedBlueprints)) {
+                    pointerClick.onLeftUnderFour.AddListener(() => {
+                        Data.ToggleTier(givenID);
+                    });
+                    pointerClick.onLeftOverFour.AddListener(() => {
+                        Data.ToggleAll(givenID);
+                    });
+                }
 
                 RectTransform scalerTransform = scaler.GetComponent<RectTransform>();
 

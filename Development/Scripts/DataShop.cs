@@ -24,7 +24,7 @@ namespace Phedg1Studios {
             static public List<int> scrapStarting = new List<int>() { 0, 0, 0, 0, 0, 0, 0 };
             static public List<int> prices = new List<int>() { 0, 0, 0, 0, 0, 0, 0 };
             static public List<int> blueprintsPurchased = new List<int>();
-            static public List<int> itemsToDrop = new List<int>();
+            static public List<List<int>> itemsToDrop = new List<List<int>>();
 
             static private string scrapFile = "Scrap.txt";
             static private string blueprintsPurchasedFile = "BlueprintsPurchased.txt";
@@ -54,11 +54,26 @@ namespace Phedg1Studios {
             static public int scrapStartingLine = 5;
             */
 
+            static public int purchaseTier = 0;
+            static public int purchaseCost = 0;
+            static public Dictionary<CostTypeIndex, int> costTypeTier = new Dictionary<CostTypeIndex, int>() {
+                { CostTypeIndex.WhiteItem, 0 },
+                { CostTypeIndex.GreenItem, 1 },
+                { CostTypeIndex.RedItem, 2 },
+                { CostTypeIndex.BossItem, 3 },
+                { CostTypeIndex.LunarItemOrEquipment, 4},
+                { CostTypeIndex.Equipment, 5},
+            };
+
             static public List<string> duplicatorNames = new List<string>() {
                 "Duplicator(Clone)",
                 "DuplicatorLarge(Clone)",
                 "DuplicatorMilitary(Clone)",
                 "DuplicatorWild(Clone)",
+            };
+            static public List<string> cauldronNames = new List<string>() {
+                "LunarCauldron, GreenToRed",
+                "LunarCauldron, WhiteToGreen",
             };
 
 
@@ -77,7 +92,9 @@ namespace Phedg1Studios {
 
             static public void RefreshInfo(Dictionary<string, string> configGlobal, Dictionary<string, string> configProfile) {
                 GetConfig(configGlobal);
-                Data.GetItemList(configProfile, itemsPurchasedName, blueprintsPurchased, blueprintsPurchasedFile, mode);
+                List<List<int>> nestedList = new List<List<int>>();
+                Data.GetItemList(configProfile, itemsPurchasedName, nestedList, blueprintsPurchasedFile, mode);
+                blueprintsPurchased = nestedList[0];
                 GetScrap(configProfile, scrapName, scrap);
                 GetScrap(configProfile, scrapRecentName, scrapRecent);
                 GetScrap(configProfile, scrapStartingName, scrapStarting);
@@ -132,14 +149,16 @@ namespace Phedg1Studios {
 
             static void AdjustItemDrops() {
                 List<int> removeIndexes = new List<int>();
-                for (int dropIndex = 0; dropIndex < itemsToDrop.Count; dropIndex++) {
-                    if (!blueprintsPurchased.Contains(itemsToDrop[dropIndex])) {
-                        removeIndexes.Add(dropIndex);
+                for (int profileIndex = 0; profileIndex < Data.profileCount; profileIndex++) {
+                    for (int dropIndex = 0; dropIndex < itemsToDrop[profileIndex].Count; dropIndex++) {
+                        if (!blueprintsPurchased.Contains(itemsToDrop[profileIndex][dropIndex])) {
+                            removeIndexes.Add(dropIndex);
+                        }
                     }
-                }
-                removeIndexes.Reverse();
-                foreach (int dropIndex in removeIndexes) {
-                    itemsToDrop.RemoveAt(dropIndex);
+                    removeIndexes.Reverse();
+                    foreach (int dropIndex in removeIndexes) {
+                        itemsToDrop[profileIndex].RemoveAt(dropIndex);
+                    }
                 }
             }
 
@@ -154,7 +173,7 @@ namespace Phedg1Studios {
                 }
             }
 
-            static public void ToggleItem(int givenID) {
+            static public void ToggleItem(int givenID, bool shouldRefresh = true) {
                 if (Data.mode == mode) {
                     if (shopMode == 0) {
                         if (!blueprintsPurchased.Contains(givenID)) {
@@ -167,8 +186,10 @@ namespace Phedg1Studios {
                                         scrap[itemTier] -= prices[itemTier];
                                         SetScrapStarting();
                                         UIDrawerShop.PurchaseItem(givenID);
-                                        Data.SaveProfileConfig();
-                                        UIDrawer.Refresh();
+                                        if (shouldRefresh) {
+                                            Data.SaveConfigProfile();
+                                            UIDrawer.Refresh();
+                                        }
                                     }
                                 }
                                 itemsClicked.RemoveAt(0);
@@ -176,14 +197,18 @@ namespace Phedg1Studios {
                         }
                     } else if (shopMode == 1) {
                         if (canDisablePurchasedBlueprints) {
-                            if (itemsToDrop.Contains(givenID)) {
-                                itemsToDrop.Remove(givenID);
-                                Data.SaveProfileConfig();
-                                UIDrawer.Refresh();
+                            if (itemsToDrop[Data.profile[mode]].Contains(givenID)) {
+                                itemsToDrop[Data.profile[mode]].Remove(givenID);
+                                if (shouldRefresh) {
+                                    Data.SaveConfigProfile();
+                                    UIDrawer.Refresh();
+                                }
                             } else {
-                                itemsToDrop.Add(givenID);
-                                Data.SaveProfileConfig();
-                                UIDrawer.Refresh();
+                                itemsToDrop[Data.profile[mode]].Add(givenID);
+                                if (shouldRefresh) {
+                                    Data.SaveConfigProfile();
+                                    UIDrawer.Refresh();
+                                }
                             }
                         }
                     }
@@ -195,7 +220,7 @@ namespace Phedg1Studios {
                 //if (true) {//result) {
                 scrap[itemTier] += 1;
                 scrapRecent[itemTier] += 1;
-                Data.SaveProfileConfig();
+                Data.SaveConfigProfile();
                 //Chat.AddPickupMessage(characterBody, "Scrap", (Color32)UIConfig.tierColours[itemTier], (uint)scrap[itemTier]);
                 //}
                 return true;
@@ -204,7 +229,7 @@ namespace Phedg1Studios {
             static public void RemoveScrap(int itemTier, int amount) {
                 scrap[itemTier] -= amount;
                 scrapRecent[itemTier] = scrapRecent[itemTier] - amount;
-                Data.SaveProfileConfig();
+                Data.SaveConfigProfile();
             }
 
             static public bool RecentScrap() {
@@ -220,7 +245,7 @@ namespace Phedg1Studios {
                 for (int scrapIndex = 0; scrapIndex < scrapRecent.Count; scrapIndex++) {
                     scrapRecent[scrapIndex] = 0;
                 }
-                Data.SaveProfileConfig();
+                Data.SaveConfigProfile();
             }
 
             static public void NormalizeScrap() {
@@ -246,7 +271,7 @@ namespace Phedg1Studios {
                         Data.itemsToDrop = Data.DuplicateItemList(blueprintsPurchased);
                     } else {
                         List<int> itemsToDropAdjusted = Data.DuplicateItemList(blueprintsPurchased);
-                        foreach (int itemID in itemsToDrop) {
+                        foreach (int itemID in itemsToDrop[Data.profile[mode]]) {
                             if (itemsToDropAdjusted.Contains(itemID)) {
                                 itemsToDropAdjusted.Remove(itemID);
                             }

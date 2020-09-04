@@ -48,23 +48,25 @@ namespace Phedg1Studios {
             }
 
             static void DrawScrapTotals() {
-                float scrapSpacing = 75;
-                float titlePreferredWidth = 195.76f;
-                GameObject panelOutline = PanelCreator.CreatePanelSize(UIDrawer.rootTransform);
-                RectTransform panelTransform = panelOutline.GetComponent<RectTransform>();
-                float panelWidth = titlePreferredWidth + (DataShop.scrap.Count + 0.5f) * scrapSpacing + UIConfig.panelPadding * 2 + 10;
-                panelTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, panelWidth);
-                panelTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, UIConfig.blueButtonHeight);
-                panelTransform.localPosition = new Vector3(UIDrawer.rootTransform.rect.width - UIConfig.offsetHorizontal - panelWidth, -UIConfig.offsetVertical, 0);
-                UIDrawer.shopInterfaces.Add(panelOutline);
+                if (DataShop.shopMode == 0 || (DataShop.shopMode == 1 && !DataShop.canDisablePurchasedBlueprints)) {
+                    float scrapSpacing = 75;
+                    float titlePreferredWidth = 195.76f;
+                    GameObject panelOutline = PanelCreator.CreatePanelSize(UIDrawer.rootTransform);
+                    RectTransform panelTransform = panelOutline.GetComponent<RectTransform>();
+                    float panelWidth = titlePreferredWidth + (DataShop.scrap.Count + 0.5f) * scrapSpacing + UIConfig.panelPadding * 2 + 10;
+                    panelTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, panelWidth);
+                    panelTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, UIConfig.blueButtonHeight);
+                    panelTransform.localPosition = new Vector3(UIDrawer.rootTransform.rect.width - UIConfig.offsetHorizontal - panelWidth, -UIConfig.offsetVertical, 0);
+                    UIDrawer.shopInterfaces.Add(panelOutline);
 
-                for (int tierIndex = 0; tierIndex < DataShop.scrap.Count; tierIndex++) {
-                    ElementCreator.SpawnTextSize(scrapTexts, panelOutline.transform.GetChild(0).gameObject, new Color(1, 1, 1, 1), 30, 0, new Vector2(0.5f, 1), new Vector2(300, UIConfig.blueButtonHeight - UIConfig.panelPadding * 2), new Vector3((tierIndex + 0.5f) * scrapSpacing, 0, 0));
+                    for (int tierIndex = 0; tierIndex < DataShop.scrap.Count; tierIndex++) {
+                        ElementCreator.SpawnTextSize(scrapTexts, panelOutline.transform.GetChild(0).gameObject, new Color(1, 1, 1, 1), 30, 0, new Vector2(0.5f, 1), new Vector2(300, UIConfig.blueButtonHeight - UIConfig.panelPadding * 2), new Vector3((tierIndex + 0.5f) * scrapSpacing, 0, 0));
+                    }
+                    List<TMPro.TextMeshProUGUI> titleText = new List<TMPro.TextMeshProUGUI>();
+                    ElementCreator.SpawnTextSize(titleText, panelOutline.transform.GetChild(0).gameObject, new Color(1, 1, 1, 1), 30, 0, new Vector2(0, 1), new Vector2(400, UIConfig.blueButtonHeight - UIConfig.panelPadding * 2), new Vector3((DataShop.scrap.Count + 0.5f) * scrapSpacing, 0, 0));
+                    titleText[0].text = "APTITUDE SCORES";
+                    titleText[0].alignment = TMPro.TextAlignmentOptions.Left;
                 }
-                List<TMPro.TextMeshProUGUI> titleText = new List<TMPro.TextMeshProUGUI>();
-                ElementCreator.SpawnTextSize(titleText, panelOutline.transform.GetChild(0).gameObject, new Color(1, 1, 1, 1), 30, 0, new Vector2(0, 1), new Vector2(400, UIConfig.blueButtonHeight - UIConfig.panelPadding * 2), new Vector3((DataShop.scrap.Count + 0.5f) * scrapSpacing, 0, 0));
-                titleText[0].text = "APTITUDE SCORES";
-                titleText[0].alignment = TMPro.TextAlignmentOptions.Left;
             }
 
             static void DisableHighlightImages() {
@@ -142,7 +144,7 @@ namespace Phedg1Studios {
                             previousSelectable.enabled = true;
                         }
                         DataShop.ClearRecentScrap();
-                        Data.SaveProfileConfig();
+                        Data.SaveConfigProfile();
                         Destroy(background.gameObject);
                     });
                     backButtonButton.Select();
@@ -169,7 +171,7 @@ namespace Phedg1Studios {
                 text[0].text = "UES EMPLOYMENT CONTRACT";
                 text[0].text += "\nSUBSECTION 17b: SALVAGE";
                 text[0].text += "\n";
-                text[0].text += "\nShould the employee be deployed to the site of any crashed UES vessels they are to prioritize the recovery of any intact cargo. As part of our vertical integration policies (38d), the employee will be reimbursed for any cargo salvaged with increased UES Aptitude Scores(11a). The category of aptitude increased is dependant on the value of the cargo salvaged, as this demonstrates ability of the employee work to UES’s interests. Employees with sufficiently high scores may redeem them to enrol in approved UES corporate training courses, to be upskilled in the use of various UES products. Should the employee perish during deployment, a drone will be dispatched to recover any cargo that was in their possession. Any Aptitude Score owing will be accredited to the employee’s next of kin, should they also be an employee of UES, as well as the right to enrol in any corporate training courses the employee had previously redeemed.";
+                text[0].text += "\nShould the employee be deployed to the site of any crashed UES vessels they are to prioritize the recovery of any intact cargo. As part of our vertical integration policies (38d), the employee will be reimbursed for any cargo salvaged with increased UES Aptitude Scores(11a). The category of aptitude increased is dependant on the value of the cargo salvaged, as this demonstrates ability of the employee work to UES’s interests. Employees with sufficiently high scores may redeem them to enrol in approved UES corporate training courses, to be upskilled in the use of various UES products. Should the employee perish during deployment (41a), a drone will be dispatched to recover any cargo that was in their possession. Any Aptitude Score owing will be accredited to the employee’s next of kin, should they also be an employee of UES, as well as the right to enrol in any corporate training courses the employee had previously redeemed.";
 
                 GameObject backButton = ButtonCreator.SpawnBlackButton(panelChildTransform.gameObject, new Vector2(UIConfig.blackButtonWidth, UIConfig.blackButtonHeight), "Back", new List<TMPro.TextMeshProUGUI>());
                 RectTransform backButtonTransform = backButton.transform.parent.GetComponent<RectTransform>();
@@ -223,7 +225,7 @@ namespace Phedg1Studios {
                             }
                         } else if (DataShop.shopMode == 1) {
                             if (DataShop.canDisablePurchasedBlueprints) {
-                                if (!DataShop.itemsToDrop.Contains(itemID)) {
+                                if (!DataShop.itemsToDrop[Data.profile[DataShop.mode]].Contains(itemID)) {
                                     for (int imageIndex = 0; imageIndex < 2; imageIndex++) {
                                         UIDrawer.itemImages[itemID][imageIndex].color = UIConfig.enabledColor;
                                     }
@@ -241,19 +243,19 @@ namespace Phedg1Studios {
                             }
                         }
                     }
-
                     for (int shopModeIndex = 0; shopModeIndex < DataShop.shopModeCount; shopModeIndex++) {
                         foreach (Image image in modeImages[shopModeIndex]) {
                             image.gameObject.SetActive(shopModeIndex == DataShop.shopMode);
                         }
                     }
-
-                    for (int tierIndex = 0; tierIndex < DataShop.scrap.Count; tierIndex++) {
-                        scrapTexts[tierIndex].text = DataShop.scrap[tierIndex].ToString();
-                        if (DataShop.scrap[tierIndex] >= DataShop.prices[tierIndex]) {
-                            scrapTexts[tierIndex].color = UIConfig.tierColours[tierIndex];
-                        } else {
-                            scrapTexts[tierIndex].color = UIConfig.tierColours[tierIndex] * 0.5f;
+                    if (DataShop.shopMode == 0) {
+                        for (int tierIndex = 0; tierIndex < DataShop.scrap.Count; tierIndex++) {
+                            scrapTexts[tierIndex].text = DataShop.scrap[tierIndex].ToString();
+                            if (DataShop.scrap[tierIndex] >= DataShop.prices[tierIndex]) {
+                                scrapTexts[tierIndex].color = UIConfig.tierColours[tierIndex];
+                            } else {
+                                scrapTexts[tierIndex].color = UIConfig.tierColours[tierIndex] * 0.5f;
+                            }
                         }
                     }
                 }

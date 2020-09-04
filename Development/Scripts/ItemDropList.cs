@@ -3,10 +3,12 @@ using RoR2;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
+using System;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using MonoMod.Cil;
+using Mono.Cecil.Cil;
 
 
 namespace Phedg1Studios {
@@ -16,27 +18,32 @@ namespace Phedg1Studios {
         [R2API.Utils.R2APISubmoduleDependency("ItemDropAPI")]
         [R2API.Utils.R2APISubmoduleDependency("PrefabAPI")]
         [R2API.Utils.R2APISubmoduleDependency("ResourcesAPI")]
-        [BepInPlugin("com.Phedg1Studios.ItemDropList", "ItemDropList", "1.1.13")]
+        [BepInPlugin(PluginGUID, "ItemDropList", "1.2.0")]
 
         public class ItemDropList : BaseUnityPlugin {
+            public const string PluginGUID = "com.Phedg1Studios.ItemDropList";
+
             static public ItemDropList itemDropList;
             public UnityEngine.Events.UnityAction setDropList = new UnityEngine.Events.UnityAction(EmptyMethod);
             List<Coroutine> characterMasterCoroutines = new List<Coroutine>();
             private int stageClearCountOld = -1;
-            private int scrapperMax = 10000;
             private List<EquipmentState> latestEquipment = new List<EquipmentState>();
             private List<EquipmentIndex> equipmentFoundThisStage = new List<EquipmentIndex>();
             private List<EquipmentIndex> equipmentFoundThisStageTwice = new List<EquipmentIndex>();
             Inventory inventoryLocal = null;
             CharacterBody characterBody = null;
             private string latestInteractionName = "";
-            private bool scrapRemaining = false;
+            private Dictionary<ItemTier, bool> tierValidMonsterTeam = new Dictionary<ItemTier, bool>();
+            private Dictionary<ItemTier, bool> tierValidScav = new Dictionary<ItemTier, bool>();
+            private ItemTier[] patternBackup = new ItemTier[0];
+            private ItemTier[] patternAdjusted = new ItemTier[0];
 
             static public void EmptyMethod() {
             }
 
             void OnceSetup() {
                 UnhookR2API();
+                Data.UpdateConfigLocations();
                 gameObject.AddComponent<Util>();
                 Resources.LoadResources();
                 SceneLoadSetup();
@@ -69,7 +76,7 @@ namespace Phedg1Studios {
                         DropList.SetItems(self);
                         DropList.AddChestChoices(self);
                         DataShop.SetScrapStarting();
-                        Data.SaveProfileConfig();
+                        Data.SaveConfigProfile();
                     }
                 });
                 On.RoR2.SceneDirector.PopulateScene += ((orig, sceneDirector) => {
@@ -121,32 +128,62 @@ namespace Phedg1Studios {
                             ClassicStageInfo.instance.interactableCategories.categories = categoriesAdjusted;
                         };
 
-                        int categoriesLength = ClassicStageInfo.instance.interactableCategories.categories.Length;
-                        for (int categoryIndex = 0; categoryIndex < categoriesLength; categoryIndex++) {
-                            List<DirectorCard> directorCards = new List<DirectorCard>();
-                            foreach (DirectorCard directorCard in ClassicStageInfo.instance.interactableCategories.categories[categoryIndex].cards) {
-                                string interactableName = InteractableCalculator.GetSpawnCardName(directorCard.spawnCard);
-                                if (new List<string>() { }.Contains(interactableName)) {
+                        if (ClassicStageInfo.instance != null) {
+                            int categoriesLength = ClassicStageInfo.instance.interactableCategories.categories.Length;
+                            for (int categoryIndex = 0; categoryIndex < categoriesLength; categoryIndex++) {
+                                List<DirectorCard> directorCards = new List<DirectorCard>();
+                                foreach (DirectorCard directorCard in ClassicStageInfo.instance.interactableCategories.categories[categoryIndex].cards) {
+                                    string interactableName = InteractableCalculator.GetSpawnCardName(directorCard.spawnCard);
+                                    if (new List<string>() { }.Contains(interactableName)) {
+                                    }
+                                    if (Data.modEnabled && InteractableCalculator.interactablesInvalid.Contains(interactableName)) {
+                                    } else {
+                                        DropOdds.UpdateChestTierOdds(directorCard.spawnCard, interactableName);
+                                        DropOdds.UpdateShrineTierOdds(directorCard, interactableName);
+                                        directorCards.Add(directorCard);
+                                    }
                                 }
-                                if (Data.modEnabled && InteractableCalculator.interactablesInvalid.Contains(interactableName)) {
-                                } else {
-                                    DropOdds.UpdateChestTierOdds(directorCard.spawnCard, interactableName);
-                                    DropOdds.UpdateShrineTierOdds(directorCard, interactableName);
-                                    directorCards.Add(directorCard);
+                                DirectorCard[] directorCardArray = new DirectorCard[directorCards.Count];
+                                for (int cardIndex = 0; cardIndex < directorCards.Count; cardIndex++) {
+                                    directorCardArray[cardIndex] = directorCards[cardIndex];
                                 }
+                                if (directorCardArray.Length == 0) {
+                                    ClassicStageInfo.instance.interactableCategories.categories[categoryIndex].selectionWeight = 0;
+                                }
+                                ClassicStageInfo.instance.interactableCategories.categories[categoryIndex].cards = directorCardArray;
                             }
-                            DirectorCard[] directorCardArray = new DirectorCard[directorCards.Count];
-                            for (int cardIndex = 0; cardIndex < directorCards.Count; cardIndex++) {
-                                directorCardArray[cardIndex] = directorCards[cardIndex];
-                            }
-                            if (directorCardArray.Length == 0) {
-                                ClassicStageInfo.instance.interactableCategories.categories[categoryIndex].selectionWeight = 0;
-                            }
-                            ClassicStageInfo.instance.interactableCategories.categories[categoryIndex].cards = directorCardArray;
                         }
                     }
                     orig(sceneDirector);
                 });
+                On.RoR2.ShopTerminalBehavior.GenerateNewPickupServer += (orig, self) => {
+                    if (Data.modEnabled) {
+                        List<PickupIndex> shopList = new List<PickupIndex>();
+                        if (self.itemTier == ItemTier.Tier1) {
+                            shopList = Run.instance.availableTier1DropList;
+                        } else if (self.itemTier == ItemTier.Tier2) {
+                            shopList = Run.instance.availableTier2DropList;
+                        } else if (self.itemTier == ItemTier.Tier3) {
+                            shopList = Run.instance.availableTier3DropList;
+                        } else if (self.itemTier == ItemTier.Boss) {
+                            shopList = Run.instance.availableBossDropList;
+                        } else if (self.itemTier == ItemTier.Lunar) {
+                            shopList = Run.instance.availableLunarDropList;
+                        }
+                        if (shopList.Count > 0) {
+                            orig(self);
+                        } else {
+                            self.SetNoPickup();
+                            RoR2.PurchaseInteraction purchaseInteraction = self.GetComponent<RoR2.PurchaseInteraction>();
+                            if (purchaseInteraction != null) {
+                                purchaseInteraction.SetAvailable(false);
+                                print("A");
+                            }
+                        }
+                    } else {
+                        orig(self);
+                    }
+                };
                 On.RoR2.DirectorCore.TrySpawnObject += ((orig, directorCore, directorSpawnRequest) => {
                     if (Data.modEnabled) {
                         if (directorSpawnRequest.spawnCard.name == "iscScavBackpack") {
@@ -158,15 +195,207 @@ namespace Phedg1Studios {
                     return orig(directorCore, directorSpawnRequest);
                 });
                 On.RoR2.Artifacts.MonsterTeamGainsItemsArtifactManager.GenerateAvailableItemsSet += ((orig) => {
+                    List<ItemTag> forbiddenTags = new List<ItemTag>();
+                    System.Type type = typeof(RoR2.Artifacts.MonsterTeamGainsItemsArtifactManager);
+                    System.Reflection.FieldInfo info = type.GetField("forbiddenTags", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                    ICollection collection = info.GetValue(null) as ICollection;
+                    foreach (object itemTag in collection) {
+                        forbiddenTags.Add((ItemTag)itemTag);
+                    }
+
+                    tierValidScav.Clear();
+                    tierValidMonsterTeam.Clear();
+                    List<PickupIndex> tier1Adjusted = RoR2.Run.instance.availableTier1DropList;
+                    tierValidMonsterTeam.Add(ItemTier.Tier1, ListContainsValidItems(forbiddenTags, tier1Adjusted));
+                    tierValidScav.Add(ItemTier.Tier1, ListContainsValidItems(new List<ItemTag>() { ItemTag.AIBlacklist }, tier1Adjusted));
+                    if (!tierValidMonsterTeam[ItemTier.Tier1] || !Data.effectMonsterItems) {
+                        tier1Adjusted = DropList.tier1DropList;
+                    }
+                    List<PickupIndex> tier2Adjusted = RoR2.Run.instance.availableTier2DropList;
+                    tierValidMonsterTeam.Add(ItemTier.Tier2, ListContainsValidItems(forbiddenTags, tier2Adjusted));
+                    tierValidScav.Add(ItemTier.Tier2, ListContainsValidItems(new List<ItemTag>() { ItemTag.AIBlacklist }, tier2Adjusted));
+                    if (!tierValidMonsterTeam[ItemTier.Tier2] || !Data.effectMonsterItems) {
+                        tier2Adjusted = DropList.tier2DropList;
+                    }
+                    List<PickupIndex> tier3Adjusted = RoR2.Run.instance.availableTier3DropList;
+                    tierValidMonsterTeam.Add(ItemTier.Tier3, ListContainsValidItems(forbiddenTags, tier3Adjusted));
+                    tierValidScav.Add(ItemTier.Tier3, ListContainsValidItems(new List<ItemTag>() { ItemTag.AIBlacklist }, tier3Adjusted));
+                    if (!tierValidMonsterTeam[ItemTier.Tier3] || !Data.effectMonsterItems) {
+                        tier3Adjusted = DropList.tier3DropList;
+                    }
+
                     if (Data.modEnabled) {
-                        //DropList.SetDropLists(DropList.tier1DropList, DropList.tier2DropList, DropList.tier3DropList, DropList.equipmentDropList);
-                        DropList.SetDropLists(RoR2.Run.instance.availableTier1DropList, RoR2.Run.instance.availableTier2DropList, RoR2.Run.instance.availableTier3DropList, RoR2.Run.instance.availableEquipmentDropList);
-                        orig();
+                        DropList.SetDropLists(tier1Adjusted, tier2Adjusted, tier3Adjusted, DropList.equipmentDropList);
+                    }
+                    orig();
+                    if (Data.modEnabled) {
                         DropList.RevertDropLists();
-                    } else {
-                        orig();
+                    }
+
+
+                    info = type.GetField("pattern", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                    collection = info.GetValue(null) as ICollection;
+                    patternBackup = new ItemTier[collection.Count];
+                    List<ItemTier> patternAdjustedList = new List<ItemTier>();
+                    int patternIndex = 0;
+                    foreach (object itemTier in collection) {
+                        patternBackup[patternIndex] = (ItemTier)itemTier;
+                        patternAdjustedList.Add((ItemTier)itemTier);
+                        patternIndex += 1;
+                    }
+                    if (Data.modEnabled && Data.effectMonsterItems) {
+                        if (!tierValidMonsterTeam[ItemTier.Tier1]) {
+                            while (patternAdjustedList.Contains(ItemTier.Tier1)) {
+                                patternAdjustedList.Remove(ItemTier.Tier1);
+                            }
+                        }
+                        if (!tierValidMonsterTeam[ItemTier.Tier2]) {
+                            while (patternAdjustedList.Contains(ItemTier.Tier2)) {
+                                patternAdjustedList.Remove(ItemTier.Tier2);
+                            }
+                        }
+                        if (!tierValidMonsterTeam[ItemTier.Tier3]) {
+                            while (patternAdjustedList.Contains(ItemTier.Tier3)) {
+                                patternAdjustedList.Remove(ItemTier.Tier3);
+                            }
+                        }
+                        patternAdjusted = new ItemTier[patternAdjustedList.Count];
+                        patternIndex = 0;
+                        foreach (ItemTier itemTier in patternAdjustedList) {
+                            patternAdjusted[patternIndex] = itemTier;
+                            patternIndex += 1;
+                        }
                     }
                 });
+                On.RoR2.Artifacts.MonsterTeamGainsItemsArtifactManager.EnsureMonsterTeamItemCount += (orig, count) => {
+                    if (Data.modEnabled && Data.effectMonsterItems) {
+                        if (patternAdjusted.Length > 0) {
+                            orig(count);
+                        }
+                    } else {
+                        orig(count);
+                    }
+                };
+                IL.RoR2.Artifacts.MonsterTeamGainsItemsArtifactManager.GrantMonsterTeamItem += (il) => {
+                    //https://github.com/risk-of-thunder/R2Wiki/wiki/Working-with-IL
+                    System.Type type = typeof(RoR2.Artifacts.MonsterTeamGainsItemsArtifactManager);
+                    System.Reflection.FieldInfo pattern = type.GetField("pattern", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                    System.Reflection.FieldInfo currentItemIterator = type.GetField("currentItemIterator", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                    
+
+                    ILCursor cursor = new ILCursor(il);
+                    cursor.GotoNext(
+                        x => x.MatchLdsfld(pattern),
+                        x => x.MatchLdsfld(currentItemIterator),
+                        x => x.MatchDup(),
+                        x => x.MatchLdcI4(1),
+                        x => x.MatchAdd(),
+                        x => x.MatchStsfld(currentItemIterator),
+                        x => x.MatchLdsfld(pattern),
+                        x => x.MatchLdlen(),
+                        x => x.MatchConvI4(),
+                        x => x.MatchRem(),
+                        x => x.MatchLdelemI4(),
+                        x => x.MatchStloc(0)
+                    );
+                    cursor.RemoveRange(11);
+
+                    cursor.EmitDelegate<System.Func<ItemTier>>(() => {
+                        int currentItemIteratorValue = int.Parse(currentItemIterator.GetValue(null).ToString());
+                        ItemTier[] currentPattern = patternBackup;
+                        if (Data.modEnabled && Data.effectMonsterItems) {
+                            currentPattern = patternAdjusted;
+                        }
+                        ItemTier itemTier = currentPattern[currentItemIteratorValue % currentPattern.Length];
+                        currentItemIterator.SetValue(null, currentItemIteratorValue + 1);
+                        return itemTier;
+                    });
+                };
+                On.EntityStates.ScavMonster.FindItem.OnEnter += (orig, self) => {
+                    if (Data.modEnabled && Data.effectMonsterItems) {
+                        bool valid = false;
+                        foreach (bool tierValid in tierValidScav.Values) {
+                            if (tierValid) {
+                                valid = true;
+                                break;
+                            }
+                        }
+                        if (valid) {
+                            List<PickupIndex> tier1Adjusted = RoR2.Run.instance.availableTier1DropList;
+                            if (!tierValidMonsterTeam[ItemTier.Tier1] || !Data.effectMonsterItems) {
+                                tier1Adjusted = DropList.tier1DropList;
+                            }
+                            List<PickupIndex> tier2Adjusted = RoR2.Run.instance.availableTier2DropList;
+                            if (!tierValidMonsterTeam[ItemTier.Tier2] || !Data.effectMonsterItems) {
+                                tier2Adjusted = DropList.tier2DropList;
+                            }
+                            List<PickupIndex> tier3Adjusted = RoR2.Run.instance.availableTier3DropList;
+                            if (!tierValidScav[ItemTier.Tier3] || !Data.effectMonsterItems) {
+                                tier3Adjusted = DropList.tier3DropList;
+                            }
+                            DropList.SetDropLists(tier1Adjusted, tier2Adjusted, tier3Adjusted, DropList.equipmentDropList);
+
+                            List<float> scavTierChanceBackup = new List<float>();
+                            scavTierChanceBackup.Add(EntityStates.ScavMonster.FindItem.tier1Chance);
+                            scavTierChanceBackup.Add(EntityStates.ScavMonster.FindItem.tier2Chance);
+                            scavTierChanceBackup.Add(EntityStates.ScavMonster.FindItem.tier3Chance);
+
+                            if (!tierValidScav[ItemTier.Tier1]) {
+                                EntityStates.ScavMonster.FindItem.tier1Chance = 0;
+                            }
+                            if (!tierValidScav[ItemTier.Tier2]) {
+                                EntityStates.ScavMonster.FindItem.tier2Chance = 0;
+                            }
+                            if (!tierValidScav[ItemTier.Tier3]) {
+                                EntityStates.ScavMonster.FindItem.tier3Chance = 0;
+                            }
+
+                            orig(self);
+
+                            DropList.RevertDropLists();
+                            EntityStates.ScavMonster.FindItem.tier1Chance = scavTierChanceBackup[0];
+                            EntityStates.ScavMonster.FindItem.tier2Chance = scavTierChanceBackup[1];
+                            EntityStates.ScavMonster.FindItem.tier3Chance = scavTierChanceBackup[2];
+                        }
+                    } else {
+                        orig(self);
+                    }
+                };
+                On.RoR2.ScavengerItemGranter.Start += (orig, self) => {
+                    if (Data.modEnabled && Data.effectMonsterItems) {
+                        List<int> scavTierTypesBackup = new List<int>();
+                        scavTierTypesBackup.Add(self.tier1Types);
+                        scavTierTypesBackup.Add(self.tier2Types);
+                        scavTierTypesBackup.Add(self.tier3Types);
+
+                        if (!tierValidScav[ItemTier.Tier1]) {
+                            self.tier1Types = 0;
+                        }
+                        if (!tierValidScav[ItemTier.Tier2]) {
+                            self.tier2Types = 0;
+                        }
+                        if (!tierValidScav[ItemTier.Tier3]) {
+                            self.tier3Types = 0;
+                        }
+
+                        orig(self);
+
+                        self.tier1Types = scavTierTypesBackup[0];
+                        self.tier2Types = scavTierTypesBackup[1];
+                        self.tier3Types = scavTierTypesBackup[2];
+                    } else {
+                        orig(self);
+                    }
+                };
+                On.RoR2.Inventory.GiveRandomEquipment += (orig, self) => {
+                    if (Data.modEnabled && Data.effectMonsterItems) {
+                        if (RoR2.Run.instance.availableEquipmentDropList.Count > 0) {
+                            orig(self);
+                        }
+                    } else {
+                        orig(self);
+                    }
+                };
                 On.RoR2.ShrineChanceBehavior.AddShrineStack += ((orig, self, interactor) => {
                     if (Data.modEnabled) {
                         DropList.SetDropLists(RoR2.Run.instance.availableTier1DropList, RoR2.Run.instance.availableTier2DropList, RoR2.Run.instance.availableTier3DropList, RoR2.Run.instance.availableEquipmentDropList);
@@ -296,21 +525,24 @@ namespace Phedg1Studios {
                     return equipmentChanged;
                 });
                 On.RoR2.Interactor.AttemptInteraction += (orig, interactor, gameObject) => {
-                    if (Data.modEnabled) {
-                        if (interactor.GetComponent<NetworkBehaviour>().hasAuthority) {
+                    if (Data.modEnabled && interactor.GetComponent<NetworkBehaviour>().hasAuthority) {
+                        if (Data.mode == DataShop.mode) {
                             latestInteractionName = gameObject.name;
-                            if (Data.mode == DataShop.mode) {
-                                if (gameObject.name == "Scrapper(Clone)") {
-                                    scrapperMax = gameObject.GetComponent<ScrapperController>().maxItemsToScrapAtATime;
-                                }
-                                if (DataShop.duplicatorNames.Contains(latestInteractionName)) {
-                                    int duplicatorTier = DataShop.duplicatorNames.IndexOf(latestInteractionName);
-                                    if (Data.GetItemTier(Data.allItemsIndexes[Data.GetScrapIndex(duplicatorTier)]) == duplicatorTier) {
-                                        scrapRemaining = interactor.GetComponent<CharacterBody>().inventory.GetItemCount(Data.GetScrapIndex(duplicatorTier)) > 0;
+                            DataShop.purchaseCost = 0;
+                            DataShop.purchaseTier = -1;
+                            if (gameObject.name == "Scrapper(Clone)") {
+                                DataShop.purchaseCost = gameObject.GetComponent<ScrapperController>().maxItemsToScrapAtATime;
+                            } else {
+                                RoR2.PurchaseInteraction purchaseInteraction = purchaseInteraction = gameObject.GetComponent<RoR2.PurchaseInteraction>();
+                                if (purchaseInteraction != null) {
+                                    if (DataShop.costTypeTier.ContainsKey(purchaseInteraction.costType)) {
+                                        DataShop.purchaseTier = DataShop.costTypeTier[purchaseInteraction.costType];
+                                        DataShop.purchaseCost = purchaseInteraction.cost;
                                     }
                                 }
                             }
                         }
+
                     }
                     orig(interactor, gameObject);
                 };
@@ -319,11 +551,8 @@ namespace Phedg1Studios {
                         if (Data.mode == DataShop.mode) {
                             if (interactor.GetComponent<NetworkBehaviour>().hasAuthority) {
                                 if (result) {
-                                    if (DataShop.duplicatorNames.Contains(latestInteractionName)) {
-                                        //if (!scrapRemaining) {
-                                        int duplicatorTier = DataShop.duplicatorNames.IndexOf(latestInteractionName);
-                                        DataShop.RemoveScrap(duplicatorTier, 1);
-                                        //}
+                                    if (DataShop.purchaseTier != -1 && DataShop.purchaseCost > 0) {
+                                        DataShop.RemoveScrap(DataShop.purchaseTier, DataShop.purchaseCost);
                                     }
 
                                     Dictionary<string, string> specialCases = new Dictionary<string, string>() {
@@ -339,11 +568,9 @@ namespace Phedg1Studios {
                                     if (specialCases.ContainsKey(adjustedName)) {
                                         adjustedName = specialCases[adjustedName];
                                     }
-
                                     if (Data.allDroneNames.ContainsKey(adjustedName)) {
                                         DataShop.AddScrap(characterBody, 6);
                                     }
-
                                     latestInteractionName = "";
                                 }
                             }
@@ -362,7 +589,6 @@ namespace Phedg1Studios {
                                 if (index == givenIndex) {
                                     RoR2.PickupPickerController.Option option = (RoR2.PickupPickerController.Option)item;
                                     ItemIndex itemIndex = RoR2.PickupCatalog.GetPickupDef(option.pickupIndex).itemIndex;
-                                    NetworkIdentity networkIdentity = pickupPickerController.GetComponent<NetworkIdentity>();
 
                                     RoR2.NetworkUIPromptController promptController = pickupPickerController.GetComponent<RoR2.NetworkUIPromptController>();
                                     type = typeof(RoR2.NetworkUIPromptController);
@@ -371,7 +597,7 @@ namespace Phedg1Studios {
                                     foreach (NetworkUser networkUser in RoR2.NetworkUser.readOnlyInstancesList) {
                                         if (localUser.currentNetworkUser.netId == networkUser.netId) {
                                             if (networkUser.isLocalPlayer) {
-                                                DataShop.RemoveScrap(Data.GetItemTier(Data.allItemsIndexes[itemIndex]), Mathf.Min(scrapperMax, networkUser.GetCurrentBody().inventory.GetItemCount(itemIndex)));
+                                                DataShop.RemoveScrap(Data.GetItemTier(Data.allItemsIndexes[itemIndex]), Mathf.Min(DataShop.purchaseCost, networkUser.GetCurrentBody().inventory.GetItemCount(itemIndex)));
                                             }
                                             break;
                                         }
@@ -462,6 +688,23 @@ namespace Phedg1Studios {
                     }
                 }
                 inventoryLocal = characterBody.inventory;
+            }
+
+            static public bool ListContainsValidItems(List<ItemTag> forbiddenTags, List<PickupIndex> givenList) {
+                foreach (PickupIndex pickupIndex in givenList) {
+                    bool validItem = true;
+                    ItemDef itemDef = ItemCatalog.GetItemDef(PickupCatalog.GetPickupDef(pickupIndex).itemIndex);
+                    foreach (ItemTag itemTag in forbiddenTags) {
+                        if (itemDef.ContainsTag(itemTag)) {
+                            validItem = false;
+                            break;
+                        }
+                    }
+                    if (validItem) {
+                        return true;
+                    }
+                }
+                return false;
             }
 
             static public void ToggleR2APIHooks() {
