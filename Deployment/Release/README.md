@@ -12,6 +12,8 @@ This mod will allow players to choose which items can be found in chests and fro
 ## DESCRIPTION ##
 The main menu will have a new button labelled *"Item Drops"*. Clicking it will open up the drop management interface. The interface displayed and how it functions will depend on which mode the mod is running in. 
 
+Three buttons, labelled "Profile: 1", "Profile: 2" and "Profile: 3", are displayed in the top right of the interface. Clicking these will allow the player to change the current item loadout. Enabling an item in one profile does not affect the others, this is so a player could configure each profile differently to easily switch between them between games. Each of the 3 profiles is unique to each mod mode.
+
 It is possible to play games with every single item disabled. Chests that are spawned will always give out an item. If every item a particular chest is able to spawn has been disabled that chest will no longer be spawned. This also applies to unique interactables like Shrines of Order (if you have every item disabled), Scavenger Backpacks, Cleansing Pools and 3D Printers to name a few. All drones are also listed in this menu and can enabled or disabled as well.
 
 This mod does not change item rarity spawn chance, other than where certain tiers are completely disabled. Making an item available or unavailable does not change whether it has been unlocked or discovered on the player's profile. This mod can be enabled and disabled from this menu, should the player wish to play normally again.
@@ -42,13 +44,18 @@ This is the record of what items and equipment the player has chosen to make ava
 Ben C.
 
 ** Education **
-Ebkr, Harb, iDeathHD
+Ebkr, Harb, iDeathHD, KingEnderBrine
 
 ** Support, Suggestions, Beta Testing and Bug Reports **
 blazingdrummer
-Borst, breadguy69, Cookiefox, FunkFrog, itλy, Mc Fow1er, Pears, Siponodo, Undead, VoidInsanity
+aschente, Borst, breadguy69, Cookiefox, Dragasath, FunkFrog, itλy, Mc Fow1er, Pears, pindab0ter, Siponodo, Undead, VoidInsanity
 
 ## Changelog ##
+** v1.2.1 **
+
+* Added flavor text.
+* Fixed Shrines of Chance giving disabled items.
+
 ** v1.2.0 **
 
 * Updated mod icon.
@@ -62,6 +69,7 @@ Borst, breadguy69, Cookiefox, FunkFrog, itλy, Mc Fow1er, Pears, Siponodo, Undea
 * Added credits to readme.
 * Updated readme formatting.
 * Published source code.
+* Increased required version of R2API.
 
 ** v1.1.15 **
 

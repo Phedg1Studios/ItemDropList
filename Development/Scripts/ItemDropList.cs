@@ -18,7 +18,7 @@ namespace Phedg1Studios {
         [R2API.Utils.R2APISubmoduleDependency("ItemDropAPI")]
         [R2API.Utils.R2APISubmoduleDependency("PrefabAPI")]
         [R2API.Utils.R2APISubmoduleDependency("ResourcesAPI")]
-        [BepInPlugin(PluginGUID, "ItemDropList", "1.2.0")]
+        [BepInPlugin(PluginGUID, "ItemDropList", "1.2.1")]
 
         public class ItemDropList : BaseUnityPlugin {
             public const string PluginGUID = "com.Phedg1Studios.ItemDropList";
@@ -86,6 +86,7 @@ namespace Phedg1Studios {
 
                         List<SpawnCard> spawnCards = new List<SpawnCard>();
                         List<string> spawnCardNames = new List<string>();
+                        spawnCardNames = new List<string>() { "ShrineChance" };
                         //spawnCardNames = new List<string>() { "BrokenDrone1", "BrokenDrone2", "BrokenEmergencyDrone", "BrokenEquipmentDrone", "BrokenFlameDrone", "BrokenMegaDrone", "BrokenMissileDrone", "BrokenTurret1" };
                         //spawnCardNames = new List<string>() { "Duplicator", "DuplicatorLarge", "DuplicatorMilitary", "DuplicatorWild" };
                         //spawnCardNames = new List<string>() { "EquipmentBarrel", "TripleShopEquipment" };
@@ -718,7 +719,11 @@ namespace Phedg1Studios {
             static public void HookR2API() {
                 System.Type type = typeof(R2API.ItemDropAPI);
                 System.Reflection.MethodInfo runOnBuildDropTable = type.GetMethod("RunOnBuildDropTable", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-                On.RoR2.Run.BuildDropTable -= (On.RoR2.Run.hook_BuildDropTable)runOnBuildDropTable.CreateDelegate(typeof(On.RoR2.Run.hook_BuildDropTable));
+                On.RoR2.Run.BuildDropTable += (On.RoR2.Run.hook_BuildDropTable)runOnBuildDropTable.CreateDelegate(typeof(On.RoR2.Run.hook_BuildDropTable));
+                
+
+                System.Reflection.MethodInfo addShrineStack = type.GetMethod("ShrineChanceBehaviorOnAddShrineStack", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                IL.RoR2.ShrineChanceBehavior.AddShrineStack += addShrineStack.CreateDelegate(typeof(ILContext.Manipulator)) as ILContext.Manipulator;
 
                 //System.Reflection.MethodInfo dropRewards = type.GetMethod("DropRewards", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
                 //IL.RoR2.BossGroup.DropRewards -= dropRewards.CreateDelegate(typeof(ILContext.Manipulator)) as ILContext.Manipulator;
@@ -728,6 +733,9 @@ namespace Phedg1Studios {
                 System.Type type = typeof(R2API.ItemDropAPI);
                 System.Reflection.MethodInfo runOnBuildDropTable = type.GetMethod("RunOnBuildDropTable", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
                 On.RoR2.Run.BuildDropTable -= (On.RoR2.Run.hook_BuildDropTable)runOnBuildDropTable.CreateDelegate(typeof(On.RoR2.Run.hook_BuildDropTable));
+
+                System.Reflection.MethodInfo addShrineStack = type.GetMethod("ShrineChanceBehaviorOnAddShrineStack", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                IL.RoR2.ShrineChanceBehavior.AddShrineStack -= addShrineStack.CreateDelegate(typeof(ILContext.Manipulator)) as ILContext.Manipulator;
 
                 //System.Reflection.MethodInfo dropRewards = type.GetMethod("DropRewards", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
                 //IL.RoR2.BossGroup.DropRewards -= dropRewards.CreateDelegate(typeof(ILContext.Manipulator)) as ILContext.Manipulator;

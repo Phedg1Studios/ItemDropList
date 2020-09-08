@@ -42,7 +42,7 @@ namespace Phedg1Studios {
                     return DataShop.mode + DataShop.shopMode;
                 }
             }
-            static public List<int> blackButtons = new List<int>() { 0, 1 };
+            static public List<int> blackButtons = new List<int>() { 1, 1 };
         }
     }
 }

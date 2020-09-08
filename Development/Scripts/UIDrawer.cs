@@ -98,6 +98,7 @@ namespace Phedg1Studios {
                 itemDropListMenu.onExit.AddListener(CloseStartingItems);
             }
 
+
             //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
             //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -139,6 +140,13 @@ namespace Phedg1Studios {
                     Data.ToggleEnabled();
                 });
                 shopInterfaces.Add(statusButton.transform.parent.gameObject);
+
+                GameObject infoButton = ButtonCreator.SpawnBlackButton(UIDrawer.rootTransform.gameObject, new Vector2(UIConfig.blackButtonWidth / 2f, UIConfig.blackButtonHeight), "?", new List<TMPro.TextMeshProUGUI>());
+                infoButton.transform.parent.GetComponent<RectTransform>().localPosition = new Vector3(UIDrawer.rootTransform.rect.width - UIConfig.offsetHorizontal - UIConfig.blackButtonWidth / 2f, -UIConfig.offsetVertical - UIConfig.blueButtonCount[Data.mode] * (UIConfig.blueButtonHeight + UIConfig.spacingVertical) - UIDrawer.storeHeight - UIConfig.spacingVertical, 0);
+                infoButton.GetComponent<RoR2.UI.HGButton>().onClick.AddListener(() => {
+                    DrawInfoPanel();
+                });
+                UIDrawer.shopInterfaces.Add(infoButton.transform.parent.gameObject);
             }
 
             static void DrawInstructions() {
@@ -256,7 +264,58 @@ namespace Phedg1Studios {
                 return storeItems;
             }
 
-            
+            static void DrawInfoPanel() {
+                Transform background = ElementCreator.SpawnImageOffset(new List<Image>(), UIDrawer.rootTransform.transform.parent.gameObject, null, new Color(0, 0, 0, 0.95f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero).transform;
+                background.GetComponent<Image>().raycastTarget = true;
+
+                GameObject panelOutline = PanelCreator.CreatePanelSize(background);
+                RectTransform panelTransform = panelOutline.GetComponent<RectTransform>();
+                float panelWidth = 700 + UIConfig.panelPadding * 2 + 10;
+                float panelHeight = 600 + UIConfig.panelPadding * 2 + 10;
+                if (Data.mode == DataNoShop.mode) {
+                    panelHeight = 500 + UIConfig.panelPadding * 2 + 10;
+                }
+                panelTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, panelWidth);
+                panelTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, panelHeight);
+                panelTransform.localPosition = new Vector3(-panelWidth / 2f, panelHeight / 2f, 0);
+                RectTransform panelChildTransform = panelTransform.GetChild(0).GetComponent<RectTransform>();
+
+                List<TMPro.TextMeshProUGUI> text = new List<TMPro.TextMeshProUGUI>();
+                ElementCreator.SpawnTextOffset(text, panelChildTransform.gameObject, new Color(1, 1, 1), 24, 0, new Vector2(UIConfig.spacingHorizontal, UIConfig.spacingVertical + UIConfig.blackButtonHeight + UIConfig.spacingVertical), new Vector2(-UIConfig.spacingHorizontal, -UIConfig.spacingVertical));
+                if (Data.mode == DataShop.mode) {
+                    text[0].text = "UES EMPLOYMENT CONTRACT";
+                    text[0].text += "\nSUBSECTION 17b: SALVAGE";
+                    text[0].text += "\n";
+                    text[0].text += "\nShould the employee be deployed to the site of any crashed UES vessels they are to prioritize the recovery of any intact cargo. As part of our vertical integration policies (38d), the employee will be reimbursed for any cargo salvaged with increased UES Aptitude Scores (11a). The category of aptitude increased is dependant on the value of the cargo salvaged, as this demonstrates ability of the employee work to UES’s interests. Employees with sufficiently high scores may redeem them to enrol in approved UES corporate training courses, to be upskilled in the use of various UES products. Should the employee perish during deployment (41a), a drone will be dispatched to recover any cargo that was in their possession. Any Aptitude Score owing will be accredited to the employee’s next of kin, should they also be an employee of UES, as well as the right to enrol in any corporate training courses the employee had previously redeemed.";
+                } else if (Data.mode == DataNoShop.mode) {
+                    text[0].text = "UES EMPLOYMENT CONTRACT";
+                    text[0].text += "\nSUBSECTION 45a: TRAINING";
+                    text[0].text += "\n";
+                    text[0].text += "\nUES endeavours to ensure that all its employees are as equipped as necessary to complete their assigned duties. To this end numerous corporate training courses have been made available, to upskill employees in the use of various UES products. A thorough analysis of employee aptitude concluded that employees with a close familial relation on the Board of Directors (3b) are more capable than any others. To this end, any such employee is afforded the right to enrol in any course that they deem, in their own judgement, to be of a benefit in fulfilling their duties. UES will take aggressive legal action against any employee alleging bias or nepotism in regards to this matter. The employee agrees to waive their right to a lawyer (42a) should they be sued in regards to this matter.";
+                }
+
+                GameObject backButton = ButtonCreator.SpawnBlackButton(panelChildTransform.gameObject, new Vector2(UIConfig.blackButtonWidth, UIConfig.blackButtonHeight), "Back", new List<TMPro.TextMeshProUGUI>());
+                RectTransform backButtonTransform = backButton.transform.parent.GetComponent<RectTransform>();
+                backButtonTransform.localPosition = new Vector3(panelWidth / 2f - UIConfig.blackButtonWidth / 2f, -panelHeight + UIConfig.spacingVertical + UIConfig.blackButtonHeight, backButtonTransform.localPosition.z);
+
+                RoR2.UI.HGButton previousSelectable = backButton.GetComponent<RoR2.UI.MPEventSystemLocator>().eventSystem.currentSelectedGameObject.GetComponent<RoR2.UI.HGButton>();
+                Button backButtonButton = backButton.GetComponent<RoR2.UI.HGButton>();
+                backButtonButton.onClick.AddListener(() => {
+                    UIDrawer.rootTransform.GetComponent<CanvasGroup>().interactable = true;
+                    if (backButtonButton.GetComponent<RoR2.UI.MPEventSystemLocator>().eventSystem.currentInputSource == RoR2.UI.MPEventSystem.InputSource.Gamepad) {
+                        previousSelectable.Select();
+                    } else {
+                        previousSelectable.enabled = false;
+                        previousSelectable.enabled = true;
+                    }
+                    Destroy(background.gameObject);
+                });
+                backButtonButton.Select();
+
+                UIDrawer.rootTransform.GetComponent<CanvasGroup>().interactable = false;
+            }
+
+
 
 
             static void ClearShopInterfaces() {
