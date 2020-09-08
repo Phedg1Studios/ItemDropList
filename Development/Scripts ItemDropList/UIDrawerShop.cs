@@ -9,7 +9,6 @@ namespace Phedg1Studios {
         public class UIDrawerShop : MonoBehaviour {
             static private List<TMPro.TextMeshProUGUI> scrapTexts = new List<TMPro.TextMeshProUGUI>();
             static private List<List<Image>> modeImages = new List<List<Image>>();
-            static private GameObject infoPanel;
             static public readonly List<string> shopModeNames = new List<string>() {
                 "Courses",
                 "Purchased",

@@ -232,9 +232,6 @@ namespace Phedg1Studios {
                 configFileVersion = ParseInt(-1, Util.GetConfig(config, configVersionName));
                 bool modEnabledOld = modEnabled;
                 modEnabled = ParseBool(modEnabledDefault, Util.GetConfig(config, enabledName));
-                if (modEnabled != modEnabledOld) {
-                    ItemDropList.ToggleR2APIHooks();
-                }
                 showAllItems = ParseBool(showAllItemsDefault, Util.GetConfig(config, showAllName));
                 mode = ParseInt(modeDefault, Util.GetConfig(config, modeName));
                 interactableMultiplier = ParseFloat(interactableMultiplierDefault, Util.GetConfig(config, interactableMultiplierName));
@@ -322,13 +319,13 @@ namespace Phedg1Studios {
                     }
                     if (allItemIDs.ContainsKey(itemID)) {
                         if (RoR2.UserProfile.GetProfile(userProfile).HasUnlockable(RoR2.ItemCatalog.GetItemDef(allItemIDs[itemID]).unlockableName)) {
-                            if (discoveredRequired[givenMode] == false || RoR2.UserProfile.GetProfile(userProfile).HasDiscoveredPickup(new PickupIndex(allItemIDs[itemID]))) {
+                            if (discoveredRequired[givenMode] == false || RoR2.UserProfile.GetProfile(userProfile).HasDiscoveredPickup(PickupCatalog.FindPickupIndex(allItemIDs[itemID]))) {
                                 return true;
                             }
                         }
                     } else if (allEquipmentIDs.ContainsKey(itemID)) {
                         if (RoR2.UserProfile.GetProfile(userProfile).HasUnlockable(RoR2.EquipmentCatalog.GetEquipmentDef(allEquipmentIDs[itemID]).unlockableName)) {
-                            if (discoveredRequired[givenMode] == false || RoR2.UserProfile.GetProfile(userProfile).HasDiscoveredPickup(new PickupIndex(allEquipmentIDs[itemID]))) {
+                            if (discoveredRequired[givenMode] == false || RoR2.UserProfile.GetProfile(userProfile).HasDiscoveredPickup(PickupCatalog.FindPickupIndex(allEquipmentIDs[itemID]))) {
                                 return true;
                             }
                         }
@@ -463,7 +460,6 @@ namespace Phedg1Studios {
                 modEnabled = !modEnabled;
                 SaveConfig();
                 UIDrawer.Refresh();
-                ItemDropList.ToggleR2APIHooks();
             }
 
             static void SaveConfig() {
@@ -526,17 +522,26 @@ namespace Phedg1Studios {
             }
 
             static public void SetDropList() {
-                DataNoShop.SetDropList();
-                DataShop.SetDropList();
+                if (Data.modEnabled) {
+                    DataNoShop.SetDropList();
+                    DataShop.SetDropList();
+                    ItemDropAPI.ItemDropAPI.playerItems = ConvertDropList(itemsToDrop);
+                    if (effectMonsterItems) {
+                        ItemDropAPI.ItemDropAPI.monsterItems = ConvertDropList(itemsToDrop);
+                    }
+                }
             }
 
-            static public bool CoinToss(float winChance) {
-                System.Random random = new System.Random();
-                int rolled = random.Next(1, 1001);
-                if (Mathf.RoundToInt(winChance * 1000) >= rolled) {
-                    return true;
+            static public List<PickupIndex> ConvertDropList(List<int> givenDropList) {
+                List<PickupIndex> pickupList = new List<PickupIndex>();
+                foreach (int itemID in givenDropList) {
+                    if (allItemIDs.ContainsKey(itemID)) {
+                        pickupList.Add(PickupCatalog.FindPickupIndex(allItemIDs[itemID]));
+                    } else if (allEquipmentIDs.ContainsKey(itemID)) {
+                        pickupList.Add(PickupCatalog.FindPickupIndex(allEquipmentIDs[itemID]));
+                    }
                 }
-                return false;
+                return pickupList;
             }
         }
     }

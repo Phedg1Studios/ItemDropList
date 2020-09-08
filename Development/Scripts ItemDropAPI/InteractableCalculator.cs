@@ -2,15 +2,12 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using RoR2;
 
 namespace Phedg1Studios {
-    namespace ItemDropList {
+    namespace ItemDropAPI {
         public class InteractableCalculator : MonoBehaviour {
             static public int prefixLength = 3;
-            static public Dictionary<string, List<float>> chestTierOdds = new Dictionary<string, List<float>>();
-            static public Dictionary<string, List<float>> shrineTierOdds = new Dictionary<string, List<float>>();
-            static public Dictionary<string, List<float>> dropTableTierOdds = new Dictionary<string, List<float>>();
-            static public Dictionary<string, List<float>> dropTableItemOdds = new Dictionary<string, List<float>>();
             static public List<string> chestInteractables = new List<string>() {
                 "Chest1",
                 "Chest2",
@@ -21,7 +18,6 @@ namespace Phedg1Studios {
                 "Lockbox",
                 "ScavBackpack",
             };
-
             static public List<string> shrineInteractables = new List<string>() {
                 "ShrineChance",
             };
@@ -31,15 +27,30 @@ namespace Phedg1Studios {
             static public List<string> dropTableItemInteractables = new List<string>() {
                 "ShrineCleanse",
             };
-            static private List<string> subsetChests = new List<string>() {
+            static public List<string> allTiersMustBePresent = new List<string>() {
+                "ShrineCleanse",
+            };
+            static public Dictionary<string, ItemTier> tierConversion = new Dictionary<string, ItemTier>() {
+                { "tier1", ItemTier.Tier1 },
+                { "tier2", ItemTier.Tier2 },
+                { "tier3", ItemTier.Tier3 },
+                { "boss", ItemTier.Boss },
+            };
+
+            public List<string> interactablesInvalid = new List<string>();
+            public Dictionary<string, List<float>> chestTierOdds = new Dictionary<string, List<float>>();
+            public Dictionary<string, List<float>> shrineTierOdds = new Dictionary<string, List<float>>();
+            public Dictionary<string, List<float>> dropTableTierOdds = new Dictionary<string, List<float>>();
+            public Dictionary<string, List<float>> dropTableItemOdds = new Dictionary<string, List<float>>();
+            private List<string> subsetChests = new List<string>() {
                 "CategoryChestDamage",
                 "CategoryChestHealing",
                 "CategoryChestUtility",
             };
-            static public Dictionary<string, Dictionary<string, bool>> subsetTiersPresent = new Dictionary<string, Dictionary<string, bool>>() {
+            public Dictionary<string, Dictionary<string, bool>> subsetTiersPresent = new Dictionary<string, Dictionary<string, bool>>() {
                
             };
-            static public Dictionary<string, bool> tiersPresent = new Dictionary<string, bool>() {
+            public Dictionary<string, bool> tiersPresent = new Dictionary<string, bool>() {
                 { "tier1", false },
                 { "tier2", false },
                 { "tier3", false },
@@ -53,13 +64,7 @@ namespace Phedg1Studios {
                 { "pearl", false },
                 { "drone", false },
             };
-            static public Dictionary<string, int> tierConversion = new Dictionary<string, int>() {
-                { "tier1", 0 },
-                { "tier2", 1 },
-                { "tier3", 2 },
-                { "boss", 3 },
-            };
-            static public Dictionary<string, Dictionary<string, bool>> interactablesTiers = new Dictionary<string, Dictionary<string, bool>>() {
+            public Dictionary<string, Dictionary<string, bool>> interactablesTiers = new Dictionary<string, Dictionary<string, bool>>() {
                 { "Chest1", new Dictionary<string, bool>() {
                     { "tier1", false },
                     //{ "tier2", false },
@@ -151,21 +156,12 @@ namespace Phedg1Studios {
                     { "equipment", false },
                 }},
             };
-            static public List<string> invalidIfNotFirst = new List<string>() {
-                "Chest1",
-                "Chest2",
-            };
-            static public List<string> allTiersMustBePresent = new List<string>() {
-                "ShrineCleanse",
-            };
-            static public List<string> interactablesInvalid = new List<string>();
-
 
             static public string GetSpawnCardName(RoR2.SpawnCard givenSpawncard) {
-                return givenSpawncard.name.Substring(InteractableCalculator.prefixLength, givenSpawncard.name.Length - prefixLength);
+                return givenSpawncard.name.Substring(prefixLength, givenSpawncard.name.Length - prefixLength);
             }
 
-            static public void CalculateInvalidInteractables(List<int> itemsToDrop) {
+            public void CalculateInvalidInteractables(List<PickupIndex> itemsToDrop) {
                 List<string> tiersPresentKeys = tiersPresent.Keys.ToList();
                 foreach (string tier in tiersPresentKeys) {
                     tiersPresent[tier] = false;
@@ -177,25 +173,26 @@ namespace Phedg1Studios {
                         subsetTiersPresent[subsetChest].Add(tier, false);
                     }
                 }
-                foreach (int itemID in itemsToDrop) {
-                    if (Data.allItemIDs.ContainsKey(itemID)) {
-                        if (!Data.scrapItems.Contains(Data.allItemIDs[itemID])) {
-                            if (RoR2.ItemCatalog.tier1ItemList.Contains(Data.allItemIDs[itemID])) {
+                foreach (PickupIndex pickupIndex in itemsToDrop) {
+                    PickupDef pickupDef = PickupCatalog.GetPickupDef(pickupIndex);
+                    if (pickupDef.itemIndex != ItemIndex.None) {
+                        if (!Catalogue.scrapItems.ContainsValue(pickupDef.itemIndex)) {
+                            if (RoR2.ItemCatalog.tier1ItemList.Contains(pickupDef.itemIndex)) {
                                 tiersPresent["tier1"] = true;
-                            } else if (RoR2.ItemCatalog.tier2ItemList.Contains(Data.allItemIDs[itemID])) {
+                            } else if (RoR2.ItemCatalog.tier2ItemList.Contains(pickupDef.itemIndex)) {
                                 tiersPresent["tier2"] = true;
-                            } else if (RoR2.ItemCatalog.tier3ItemList.Contains(Data.allItemIDs[itemID])) {
+                            } else if (RoR2.ItemCatalog.tier3ItemList.Contains(pickupDef.itemIndex)) {
                                 tiersPresent["tier3"] = true;
-                            } else if (Data.pearls.Contains(Data.allItemIDs[itemID])) {
+                            } else if (Catalogue.pearls.Contains(pickupDef.itemIndex)) {
                                 tiersPresent["pearl"] = true;
-                            } else if (Data.bossItems.Contains(Data.allItemIDs[itemID])) {
+                            } else if (Catalogue.bossItems.Contains(pickupDef.itemIndex)) {
                                 tiersPresent["boss"] = true;
-                            } else if (RoR2.ItemCatalog.lunarItemList.Contains(Data.allItemIDs[itemID])) {
+                            } else if (RoR2.ItemCatalog.lunarItemList.Contains(pickupDef.itemIndex)) {
                                 tiersPresent["lunar"] = true;
                             }
 
-                            if (!RoR2.ItemCatalog.lunarItemList.Contains(Data.allItemIDs[itemID]) && !Data.bossItems.Contains(Data.allItemIDs[itemID]) && !Data.pearls.Contains(Data.allItemIDs[itemID])) {
-                                RoR2.ItemDef itemDef = RoR2.ItemCatalog.GetItemDef(Data.allItemIDs[itemID]);
+                            if (!RoR2.ItemCatalog.lunarItemList.Contains(pickupDef.itemIndex) && !Catalogue.bossItems.Contains(pickupDef.itemIndex) && !Catalogue.pearls.Contains(pickupDef.itemIndex)) {
+                                RoR2.ItemDef itemDef = RoR2.ItemCatalog.GetItemDef(pickupDef.itemIndex);
                                 foreach (RoR2.ItemTag itemTag in itemDef.tags) {
                                     string interactableName = "";
                                     if (itemTag == RoR2.ItemTag.Damage) {
@@ -209,20 +206,20 @@ namespace Phedg1Studios {
                                         interactableName = "CategoryChestUtility";
                                     }
                                     if (subsetChests.Contains(interactableName)) {
-                                        if (RoR2.ItemCatalog.tier1ItemList.Contains(Data.allItemIDs[itemID])) {
+                                        if (RoR2.ItemCatalog.tier1ItemList.Contains(pickupDef.itemIndex)) {
                                             subsetTiersPresent[interactableName]["tier1"] = true;
-                                        } else if (RoR2.ItemCatalog.tier2ItemList.Contains(Data.allItemIDs[itemID])) {
+                                        } else if (RoR2.ItemCatalog.tier2ItemList.Contains(pickupDef.itemIndex)) {
                                             subsetTiersPresent[interactableName]["tier2"] = true;
-                                        } else if (RoR2.ItemCatalog.tier3ItemList.Contains(Data.allItemIDs[itemID])) {
+                                        } else if (RoR2.ItemCatalog.tier3ItemList.Contains(pickupDef.itemIndex)) {
                                             subsetTiersPresent[interactableName]["tier3"] = true;
                                         }
                                     }
                                 }
                             }
                         }
-                    } else if (Data.allEquipmentIDs.ContainsKey(itemID)) {
-                        if (!Data.eliteEquipment.Contains(Data.allEquipmentIDs[itemID])) {
-                            RoR2.EquipmentDef equipmentDef = RoR2.EquipmentCatalog.GetEquipmentDef(Data.allEquipmentIDs[itemID]);
+                    } else if (pickupDef.equipmentIndex != EquipmentIndex.None) {
+                        if (!Catalogue.eliteEquipment.Contains(pickupDef.equipmentIndex)) {
+                            RoR2.EquipmentDef equipmentDef = RoR2.EquipmentCatalog.GetEquipmentDef(pickupDef.equipmentIndex);
                             if (equipmentDef.isLunar) {
                                 tiersPresent["lunar"] = true;
                             } else if (equipmentDef.isBoss) {
@@ -232,8 +229,6 @@ namespace Phedg1Studios {
                             }
                             
                         }
-                    } else if (Data.allDroneIDs.ContainsKey(itemID)) {
-                        tiersPresent["drone"] = true;
                     }
                 }
                 List<string> interactableTypeKeys = interactablesTiers.Keys.ToList();
@@ -255,7 +250,7 @@ namespace Phedg1Studios {
                 List<string> scrapTierKeys = interactablesTiers["Scrapper"].Keys.ToList();
                 foreach (string tier in scrapTierKeys) {
                     if (interactablesTiers["Scrapper"][tier]) {
-                        if (!itemsToDrop.Contains(Data.allItemsIndexes[Data.GetScrapIndex(tierConversion[tier])])) {
+                        if (!itemsToDrop.Contains(PickupCatalog.FindPickupIndex(Catalogue.scrapItems[tierConversion[tier]]))) {
                             interactablesTiers["Scrapper"][tier] = false;
                         }
                     }
@@ -274,13 +269,6 @@ namespace Phedg1Studios {
                     }
                     if (!interactableValid || (allTiersMustBePresent.Contains(interactableType) && !allTrue)) {
                         interactablesInvalid.Add(interactableType);
-                    }
-                }
-                foreach (int droneID in Data.allDroneIDs.Keys) {
-                    if (!itemsToDrop.Contains(droneID)) {
-                        if (!interactablesInvalid.Contains(Data.allDroneIDs[droneID])) {
-                            interactablesInvalid.Add(Data.allDroneIDs[droneID]);
-                        }
                     }
                 }
             }

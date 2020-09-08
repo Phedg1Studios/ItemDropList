@@ -26,29 +26,23 @@
     <Compile Remove="Assets\**" />
     <Compile Remove="Dependencies\**" />
     <Compile Remove="Misc\**" />
-    <Compile Remove="Scripts ItemDropAPI\**" />
+    <Compile Remove="Resources\**" />
+    <Compile Remove="Scripts ItemDropList\**" />
     <EmbeddedResource Remove="Assets\**" />
     <EmbeddedResource Remove="Dependencies\**" />
     <EmbeddedResource Remove="Misc\**" />
-    <EmbeddedResource Remove="Scripts ItemDropAPI\**" />
+    <EmbeddedResource Remove="Resources\**" />
+    <EmbeddedResource Remove="Scripts ItemDropList\**" />
     <None Remove="Assets\**" />
     <None Remove="Dependencies\**" />
     <None Remove="Misc\**" />
-    <None Remove="Scripts ItemDropAPI\**" />
+    <None Remove="Resources\**" />
+    <None Remove="Scripts ItemDropList\**" />
   </ItemGroup>
 
   <ItemGroup>
     <None Remove="assets" />
     <None Remove="assets.manifest" />
-    <None Remove="Resources\assets" />
-    <None Remove="Resources\assets.manifest" />
-    <None Remove="Resources\Tick-01.png" />
-    <None Remove="Resources\Tick.ai" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\assets" />
-    <EmbeddedResource Include="Resources\assets.manifest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -90,10 +84,6 @@
     </Reference>
     <Reference Include="HGUnityUtils">
       <HintPath>Dependencies\HGUnityUtils.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="ItemDropAPI">
-      <HintPath>Dependencies\ItemDropAPI.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="KdTreeLib">

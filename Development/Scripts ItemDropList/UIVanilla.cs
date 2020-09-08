@@ -43,7 +43,7 @@ namespace Phedg1Studios {
                 RoR2.InteractableSpawnCard[] allInteractables = UnityEngine.Resources.LoadAll<RoR2.InteractableSpawnCard>("SpawnCards/InteractableSpawnCard");
                 foreach (RoR2.InteractableSpawnCard spawnCard in allInteractables) {
                     if (spawnCard.name.Contains("Broken")) {
-                        string interactableName = InteractableCalculator.GetSpawnCardName(spawnCard);
+                        string interactableName = ItemDropAPI.InteractableCalculator.GetSpawnCardName(spawnCard);
                         Texture texture = spawnCard.prefab.GetComponent<RoR2.SummonMasterBehavior>().masterPrefab.GetComponent<RoR2.CharacterMaster>().bodyPrefab.GetComponent<RoR2.CharacterBody>().portraitIcon;
                         Sprite sprite = Sprite.Create(texture as Texture2D, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
 

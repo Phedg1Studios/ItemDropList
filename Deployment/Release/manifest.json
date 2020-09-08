@@ -1,6 +1,6 @@
 {
     "name": "ItemDropList",
-    "version_number": "1.2.1",
+    "version_number": "1.2.2",
     "website_url": "https://github.com/Phedg1Studios/ItemDropList",
     "description": "This mod will allow players to choose which items can be found in chests and from boss drops.",
     "dependencies": [

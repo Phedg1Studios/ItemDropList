@@ -51,6 +51,11 @@ blazingdrummer
 aschente, Borst, breadguy69, Cookiefox, Dragasath, FunkFrog, itλy, Mc Fow1er, Pears, pindab0ter, Siponodo, Undead, VoidInsanity
 
 ## Changelog ##
+** v1.2.2 **
+
+* Fixed spawning only Shrines of Chance.
+* Fixed Scrapper and Artifact of Command interface not being adjusted in the normal mode.
+
 ** v1.2.1 **
 
 * Added flavor text.

@@ -137,9 +137,10 @@ namespace Phedg1Studios {
             }
 
             static void AdjustScrap() {
-                InteractableCalculator.CalculateInvalidInteractables(blueprintsPurchased);
+                ItemDropAPI.InteractableCalculator interactableCalculator = new ItemDropAPI.InteractableCalculator();
+                interactableCalculator.CalculateInvalidInteractables(Data.ConvertDropList(blueprintsPurchased));
                 for (int tierIndex = 0; tierIndex < scrapTiers.Count; tierIndex++) {
-                    if (!InteractableCalculator.tiersPresent[scrapTiers[tierIndex]]) {
+                    if (!interactableCalculator.tiersPresent[scrapTiers[tierIndex]]) {
                         if (scrap[tierIndex] < prices[tierIndex]) {
                             scrap[tierIndex] = prices[tierIndex];
                         }
