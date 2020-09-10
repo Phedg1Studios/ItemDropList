@@ -114,6 +114,8 @@ namespace Phedg1Studios {
                 DuplicateDropList(self.availableTier3DropList, tier3DropListOriginal);
                 DuplicateDropList(self.availableEquipmentDropList, equipmentDropListOriginal);
 
+                self.availableItems.Clear();
+                self.availableEquipment.Clear();
                 self.availableTier1DropList.Clear();
                 self.availableTier2DropList.Clear();
                 self.availableTier3DropList.Clear();
@@ -138,6 +140,7 @@ namespace Phedg1Studios {
                     if (!Catalogue.scrapItems.ContainsValue(itemIndex)) {
                         if (ItemDropAPI.playerItems.Contains(PickupCatalog.FindPickupIndex(itemIndex))) {
                             availableTier1DropList.Add(PickupCatalog.FindPickupIndex(itemIndex));
+                            self.availableItems.Add(itemIndex);
                         }
                     }
                 }
@@ -145,6 +148,7 @@ namespace Phedg1Studios {
                     if (!Catalogue.scrapItems.ContainsValue(itemIndex)) {
                         if (ItemDropAPI.playerItems.Contains(PickupCatalog.FindPickupIndex(itemIndex))) {
                             availableTier2DropList.Add(PickupCatalog.FindPickupIndex(itemIndex));
+                            self.availableItems.Add(itemIndex);
                         }
                     }
                 }
@@ -152,6 +156,7 @@ namespace Phedg1Studios {
                     if (!Catalogue.scrapItems.ContainsValue(itemIndex)) {
                         if (ItemDropAPI.playerItems.Contains(PickupCatalog.FindPickupIndex(itemIndex))) {
                             availableTier3DropList.Add(PickupCatalog.FindPickupIndex(itemIndex));
+                            self.availableItems.Add(itemIndex);
                         }
                     }
                 }
@@ -159,24 +164,26 @@ namespace Phedg1Studios {
                     if (!Catalogue.scrapItems.ContainsValue(itemIndex)) {
                         if (ItemDropAPI.playerItems.Contains(PickupCatalog.FindPickupIndex(itemIndex))) {
                             availableBossDropList.Add(PickupCatalog.FindPickupIndex(itemIndex));
+                            self.availableItems.Add(itemIndex);
                         }
                     }
                 }
                 foreach (ItemIndex itemIndex in RoR2.ItemCatalog.lunarItemList) {
                     if (ItemDropAPI.playerItems.Contains(PickupCatalog.FindPickupIndex(itemIndex))) {
                         availableLunarDropList.Add(PickupCatalog.FindPickupIndex(itemIndex));
+                        self.availableItems.Add(itemIndex);
                     }
                 }
                 foreach (EquipmentIndex equipmentIndex in RoR2.EquipmentCatalog.equipmentList) {
                     if (!Catalogue.lunarEquipment.Contains(equipmentIndex) && !Catalogue.eliteEquipment.Contains(equipmentIndex) && ItemDropAPI.playerItems.Contains(PickupCatalog.FindPickupIndex(equipmentIndex))) {
                         availableEquipmentDropList.Add(PickupCatalog.FindPickupIndex(equipmentIndex));
-                        availableNormalEquipmentDropList.Add(PickupCatalog.FindPickupIndex(equipmentIndex));
+                        self.availableEquipment.Add(equipmentIndex);
                     }
                 }
                 foreach (EquipmentIndex equipmentIndex in Catalogue.lunarEquipment) {
                     if (ItemDropAPI.playerItems.Contains(PickupCatalog.FindPickupIndex(equipmentIndex))) {
                         availableLunarDropList.Add(PickupCatalog.FindPickupIndex(equipmentIndex));
-                        availableLunarEquipmentDropList.Add(PickupCatalog.FindPickupIndex(equipmentIndex));
+                        self.availableEquipment.Add(equipmentIndex);
                     }
                 }
                 foreach (EquipmentIndex equipmentIndex in Catalogue.eliteEquipment) {

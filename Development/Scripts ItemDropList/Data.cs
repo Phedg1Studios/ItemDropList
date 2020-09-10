@@ -80,7 +80,7 @@ namespace Phedg1Studios {
 
             static private List<string> oldConfigFiles = new List<string>();
 
-            static private Dictionary<int, bool> discoveredRequired = new Dictionary<int, bool>() {
+            static public Dictionary<int, bool> discoveredRequired = new Dictionary<int, bool>() {
                 { 0, true },
                 { 1, false },
             };
@@ -476,6 +476,8 @@ namespace Phedg1Studios {
                 configString += "\n\n# Whether monsters should be limited to the same item list\n# When active this effects the Artifact of Evolution, Void Fields and Scavengers\n#\n# Setting type: Boolean\n# Default value: " + effectMonsterItemsDefault.ToString() + "\n" + effectMonsterItemsName[0] + variableCharUpdate + effectMonsterItems.ToString();
                 configString += "\n\n# Whether Defensive Microbots should be added to the item list\n# When active it can be found in chests and be given to monsters\n#\n# Setting type: Boolean\n# Default value: " + defensiveMicrobotsDefault.ToString() + "\n" + defensiveMicrobotsName[0].ToString() + variableCharUpdate + defensiveMicrobots.ToString();
                 configString += "\n\n# Multiply amount of intereactables spawned per stage\n#\n# Setting type: Float\n# Default value: " + interactableMultiplierDefault.ToString() + "\n" + interactableMultiplierName[0] + variableCharUpdate + interactableMultiplier.ToString();
+                configString += "\n\n[Standard]";
+                configString += "\n\n# Whether items must be discovered to show up in the menu\n#\n# Setting type: Boolean\n# Default value: " + DataNoShop.discoveredRequiredDefault.ToString() + "\n" + DataNoShop.discoveredRequiredName[0] + variableCharUpdate + discoveredRequired[DataNoShop.mode].ToString();
                 configString += "\n\n[Training]";
                 //configString += "\n\n# Chance to find scrap when picking up an item\n#\n# Setting type: Float\n# Default value: 1.0\nscrapDropChance = " + DataShop.scrapDropChance.ToString();
                 configString += "\n\n# Whether purchased items can be removed from the drop list\n#\n# Setting type: Boolean\n# Default value: " + DataShop.canDisablePurchasedBlueprintsDefault.ToString() + "\n" + DataShop.toggleItemsName[0] + variableCharUpdate + DataShop.canDisablePurchasedBlueprints.ToString();
