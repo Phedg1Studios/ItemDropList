@@ -77,6 +77,10 @@
       <HintPath>Dependencies\BepInEx.Preloader.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="BiggerBazaar">
+      <HintPath>Dependencies\BiggerBazaar.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="Facepunch.Steamworks">
       <HintPath>Dependencies\Facepunch.Steamworks.dll</HintPath>
       <Private>false</Private>

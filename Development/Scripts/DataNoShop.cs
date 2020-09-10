@@ -10,11 +10,13 @@ namespace Phedg1Studios {
         public class DataNoShop : MonoBehaviour {
             static public readonly int mode = 0;
 
+            static public bool discoveredRequiredDefault = true;
+
             static public List<List<int>> itemsToDrop = new List<List<int>>();
             static private string itemsToDropFile = "ItemsToDrop.txt";
-            //static public int itemsToDropLine = 0;
 
             static public List<string> itemsToDropName = new List<string>() { "itemsToDrop", "0" };
+            static public List<string> discoveredRequiredName = new List<string>() { "discoveredRequired" };
 
             static public void RefreshInfo(Dictionary<string, string> configGlobal, Dictionary<string, string> configProfile) {
                 GetConfig(configGlobal);
@@ -22,7 +24,7 @@ namespace Phedg1Studios {
             }
 
             static void GetConfig(Dictionary<string, string> config) {
-
+                Data.discoveredRequired[mode] = Data.ParseBool(discoveredRequiredDefault, Util.GetConfig(config, discoveredRequiredName));
             }
 
 

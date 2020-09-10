@@ -113,6 +113,8 @@ namespace Phedg1Studios {
                 DuplicateDropList(self.availableTier3DropList, tier3DropList);
                 DuplicateDropList(self.availableEquipmentDropList, equipmentDropList);
 
+                self.availableItems.Clear();
+                self.availableEquipment.Clear();
                 self.availableTier1DropList.Clear();
                 self.availableTier2DropList.Clear();
                 self.availableTier3DropList.Clear();
@@ -130,6 +132,7 @@ namespace Phedg1Studios {
                     if (!Data.scrapItems.Contains(itemIndex)) {
                         if (Data.itemsToDrop.Contains(Data.allItemsIndexes[itemIndex])) {
                             self.availableTier1DropList.Add(new PickupIndex(itemIndex));
+                            self.availableItems.Add(itemIndex);
                         }
                     }
                 }
@@ -137,6 +140,7 @@ namespace Phedg1Studios {
                     if (!Data.scrapItems.Contains(itemIndex)) {
                         if (Data.itemsToDrop.Contains(Data.allItemsIndexes[itemIndex])) {
                             self.availableTier2DropList.Add(new PickupIndex(itemIndex));
+                            self.availableItems.Add(itemIndex);
                         }
                     }
                 }
@@ -144,6 +148,7 @@ namespace Phedg1Studios {
                     if (!Data.scrapItems.Contains(itemIndex)) {
                         if (Data.itemsToDrop.Contains(Data.allItemsIndexes[itemIndex])) {
                             self.availableTier3DropList.Add(new PickupIndex(itemIndex));
+                            self.availableItems.Add(itemIndex);
                         }
                     }
                 }
@@ -151,22 +156,26 @@ namespace Phedg1Studios {
                     if (!Data.scrapItems.Contains(itemIndex)) {
                         if (Data.itemsToDrop.Contains(Data.allItemsIndexes[itemIndex])) {
                             self.availableBossDropList.Add(new PickupIndex(itemIndex));
+                            self.availableItems.Add(itemIndex);
                         }
                     }
                 }
                 foreach (ItemIndex itemIndex in RoR2.ItemCatalog.lunarItemList) {
                     if (Data.itemsToDrop.Contains(Data.allItemsIndexes[itemIndex])) {
                         self.availableLunarDropList.Add(new PickupIndex(itemIndex));
+                        self.availableItems.Add(itemIndex);
                     }
                 }
                 foreach (EquipmentIndex equipmentIndex in RoR2.EquipmentCatalog.equipmentList) {
                     if (!Data.lunarEquipment.Contains(equipmentIndex) && Data.itemsToDrop.Contains(Data.allEquipmentIndexes[equipmentIndex])) {
                         self.availableEquipmentDropList.Add(new PickupIndex(equipmentIndex));
+                        self.availableEquipment.Add(equipmentIndex);
                     }
                 }
                 foreach (EquipmentIndex equipmentIndex in Data.lunarEquipment) {
                     if (Data.itemsToDrop.Contains(Data.allEquipmentIndexes[equipmentIndex])) {
                         self.availableLunarDropList.Add(new PickupIndex(equipmentIndex));
+                        self.availableEquipment.Add(equipmentIndex);
                     }
                 }
                 foreach (EquipmentIndex equipmentIndex in Data.eliteEquipment) {
