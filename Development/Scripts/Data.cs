@@ -232,6 +232,10 @@ namespace Phedg1Studios {
                 configFileVersion = ParseInt(-1, Util.GetConfig(config, configVersionName));
                 bool modEnabledOld = modEnabled;
                 modEnabled = ParseBool(modEnabledDefault, Util.GetConfig(config, enabledName));
+                if (modEnabled != modEnabledOld) {
+                    ItemDropList.ToggleDropAPIHooks();
+                    modEnabledOld = modEnabled;
+                }
                 showAllItems = ParseBool(showAllItemsDefault, Util.GetConfig(config, showAllName));
                 mode = ParseInt(modeDefault, Util.GetConfig(config, modeName));
                 interactableMultiplier = ParseFloat(interactableMultiplierDefault, Util.GetConfig(config, interactableMultiplierName));
@@ -460,6 +464,7 @@ namespace Phedg1Studios {
                 modEnabled = !modEnabled;
                 SaveConfig();
                 UIDrawer.Refresh();
+                ItemDropList.ToggleDropAPIHooks();
             }
 
             static void SaveConfig() {
@@ -527,9 +532,9 @@ namespace Phedg1Studios {
                 if (Data.modEnabled) {
                     DataNoShop.SetDropList();
                     DataShop.SetDropList();
-                    ItemDropAPI.ItemDropAPI.playerItems = ConvertDropList(itemsToDrop);
+                    ItemDropAPIFixes.ItemDropAPIFixes.playerItems = ConvertDropList(itemsToDrop);
                     if (effectMonsterItems) {
-                        ItemDropAPI.ItemDropAPI.monsterItems = ConvertDropList(itemsToDrop);
+                        ItemDropAPIFixes.ItemDropAPIFixes.monsterItems = ConvertDropList(itemsToDrop);
                     }
                 }
             }

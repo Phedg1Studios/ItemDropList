@@ -26,15 +26,12 @@
     <Compile Remove="Assets\**" />
     <Compile Remove="Dependencies\**" />
     <Compile Remove="Misc\**" />
-    <Compile Remove="Scripts ItemDropAPI\**" />
     <EmbeddedResource Remove="Assets\**" />
     <EmbeddedResource Remove="Dependencies\**" />
     <EmbeddedResource Remove="Misc\**" />
-    <EmbeddedResource Remove="Scripts ItemDropAPI\**" />
     <None Remove="Assets\**" />
     <None Remove="Dependencies\**" />
     <None Remove="Misc\**" />
-    <None Remove="Scripts ItemDropAPI\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -72,16 +69,8 @@
       <HintPath>Dependencies\BepInEx.Harmony.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="BepInEx.MonoMod.Loader">
-      <HintPath>Dependencies\BepInEx.MonoMod.Loader.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
     <Reference Include="BepInEx.Preloader">
       <HintPath>Dependencies\BepInEx.Preloader.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="BiggerBazaar">
-      <HintPath>Dependencies\BiggerBazaar.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Facepunch.Steamworks">
@@ -96,8 +85,8 @@
       <HintPath>Dependencies\HGUnityUtils.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="ItemDropAPI">
-      <HintPath>Dependencies\ItemDropAPI.dll</HintPath>
+    <Reference Include="ItemDropAPIFixes">
+      <HintPath>Dependencies\ItemDropAPIFixes.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="KdTreeLib">
@@ -166,10 +155,6 @@
     </Reference>
     <Reference Include="Rewired_Windows_Lib">
       <HintPath>Dependencies\Rewired_Windows_Lib.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="ShareSuite">
-      <HintPath>Dependencies\ShareSuite.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="System.Configuration">

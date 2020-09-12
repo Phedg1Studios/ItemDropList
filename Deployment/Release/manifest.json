@@ -1,10 +1,11 @@
 {
     "name": "ItemDropList",
-    "version_number": "1.2.2",
+    "version_number": "1.2.6",
     "website_url": "https://github.com/Phedg1Studios/ItemDropList",
     "description": "This mod will allow players to choose which items can be found in chests and from boss drops, as well as which items monsters can receive.",
     "dependencies": [
       "bbepis-BepInExPack-5.3.1",
-      "tristanmcpherson-R2API-2.5.14"
+      "tristanmcpherson-R2API-2.5.14",
+      "Phedg1Studios-ItemDropAPIFixes-1.0.0"
     ]
 }

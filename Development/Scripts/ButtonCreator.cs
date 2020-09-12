@@ -6,8 +6,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-//Data.data.GetItemPoints(givenID).ToString() + " ¢";
-
 namespace Phedg1Studios {
     namespace ItemDropList {
         public class ButtonCreator : MonoBehaviour {

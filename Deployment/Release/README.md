@@ -14,9 +14,7 @@ The main menu will have a new button labelled *"Item Drops"*. Clicking it will o
 
 Three buttons, labelled "Profile: 1", "Profile: 2" and "Profile: 3", are displayed in the top right of the interface. Clicking these will allow the player to change the current item loadout. Enabling an item in one profile does not affect the others, this is so a player could configure each profile differently to easily switch between them between games. Each of the 3 profiles is unique to each mod mode.
 
-It is possible to play games with every single item disabled. Chests that are spawned will always give out an item. If every item a particular chest is able to spawn has been disabled that chest will no longer be spawned. This also applies to unique interactables like Shrines of Order (if you have every item disabled), Scavenger Backpacks, Cleansing Pools and 3D Printers to name a few. All drones are also listed in this menu and can enabled or disabled as well.
-
-This mod does not change item rarity spawn chance, other than where certain tiers are completely disabled. Making an item available or unavailable does not change whether it has been unlocked or discovered on the player's profile. This mod can be enabled and disabled from this menu, should the player wish to play normally again.
+This mod does not change item rarity spawn chance, other than where certain tiers are completely disabled. Making an item available or unavailable does not change whether it has been unlocked or discovered on the player's profile. This mod can be enabled and disabled from this menu, should the player wish to play normally again. All drones are also listed in this menu and can enabled or disabled as well.
 
 ### MODES ###
 
@@ -48,9 +46,28 @@ Ebkr, Harb, iDeathHD, KingEnderBrine
 
 ** Support, Suggestions, Beta Testing and Bug Reports **
 blazingdrummer
-aschente, Borst, breadguy69, Cookiefox, Dragasath, FunkFrog, itλy, Mc Fow1er, Pears, pindab0ter, Siponodo, Undead, VoidInsanity
+aschente, Borst, breadguy69, Cookiefox, Mc Fow1er, Pears, Undead, VoidInsanity
 
 ## Changelog ##
+** v1.2.6 **
+
+* ACTUALLY added missing dependancy for ItemDropAPIFixes.
+
+** v1.2.5 **
+
+* Added missing dependancy for ItemDropAPIFixes.
+
+** v1.2.4 **
+
+* Added config for whether items have to be discovered to show up in the menu.
+* Added *BiggerBazaar* compatibility.
+* Refactored every hook into its own function.
+* Refactored spawn and tier limiting code into a standalone mod so other users and devs can take advantage of it.
+
+** v1.2.3 **
+
+* Fixed Scrapper and Artifact of Command interface not using the item what was clicked.
+
 ** v1.2.2 **
 
 * Fixed spawning only Shrines of Chance.
